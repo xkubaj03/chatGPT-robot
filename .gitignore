@@ -1,2 +1,3 @@
 .env
-logs/*
+assistant/logs/*
+assistant/functions/__pycache__
