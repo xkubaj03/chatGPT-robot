@@ -3,6 +3,8 @@ import requests
 import json
 from dotenv import load_dotenv
 import os
+import subprocess
+
 
 load_dotenv()
 ROBOT_URL = os.getenv('ROBOT_URL')
@@ -22,6 +24,7 @@ def started(parameters):
     response = requests.get(ROBOT_URL + "/state/started")
 
     return response.text
+
 
 startSpec = {
     "name": "start",
@@ -54,6 +57,7 @@ def start(parameters):
     
     return response.text
 
+
 stopSpec = {
     "name": "stop",
     "description": "Stops the robot",
@@ -69,6 +73,7 @@ def stop(parameters):
     response = requests.put(ROBOT_URL + "/state/stop")
 
     return response.text
+
 
 getPoseSpec = {
     "name": "getPose",
@@ -86,15 +91,11 @@ def getPose(parameters):
 
     return response.text
 
+
 putPoseSpec = {
     "name": "putPose",
-    "description": "Sets the robot's arm current position and orientation." + 
-     "If I want to move the robots arm use default " +
-     "orientation x = 1, x,z,w = 0, " +
-     "velocity = 50, "+
-     "acceleration = 0.5,"  +
-     "safe = true "
-     "moveType = JUMP ",
+    "description": "Sets the robot's arm position and orientation." + 
+     "If not mentioned use function getDefValues to get all default values.",
     "parameters": {      
         "type": "object",  
         "properties": {
@@ -152,11 +153,11 @@ putPoseSpec = {
 }
 
 def putPose(parameters):
-    print(parameters)
+    #print(parameters)
     required_params = ["moveType", "velocity", "acceleration", "safe", "orientation", "position"]
     for param in required_params:
         if param not in parameters:
-            print(f"Missing required parameter: {param}")
+            #print(f"Missing required parameter: {param}")
             return (f"Missing required parameter: {param}")
 
     moveType = parameters["moveType"]
@@ -177,6 +178,7 @@ def putPose(parameters):
 
     return response.text
 
+
 putHomeSpec = {
     "name": "putHome",
     "description": "Moves the robot arm to home position",
@@ -194,6 +196,7 @@ def putHome(parameters):
     if response.status_code == 204:
             return "Comming home!"
     return response.text
+
 
 suckSpec = {
     "name": "suck",
@@ -213,6 +216,7 @@ def suck(parameters):
             return "Sucked!"
     return response.text
 
+
 releaseSpec = {
     "name": "release",
     "description": "Turns on the vacuum off (release object that arm holding).",
@@ -230,6 +234,7 @@ def release(parameters):
     if response.status_code == 204:
             return "Released!"
     return response.text
+
 
 beltSpeedSpec = {
     "name": "beltSpeed",
@@ -262,6 +267,7 @@ def beltSpeed(parameters):
     if response.status_code == 204:
         return "Belt speed was succesfully set!"
     return response.text
+
 
 beltDistanceSpec = {
     "name": "beltDistance",
@@ -300,9 +306,68 @@ def beltDistance(parameters):
             return "Belt distance was succesfully set!"
     return response.text
 
+
+getDefValuesSpec = {
+    "name": "getDefValues",
+    "description": "Gets all default values for putPose function. And other saved poses.",
+    "parameters": {      
+        "type": "object",  
+        "properties": {
+        },
+    },
+    "requiredParams": [],
+}
+
+def getDefValues(parameters):
+    return json.dumps(FunctionHandler.defaultValues)
+
+
+setDefValueSpec = {
+     "name": "setDefValue",
+    "description": "Set specific default value for putPose function. And also save other poses.",
+    "parameters": {      
+        "type": "object",  
+        "properties": {
+             "key": {
+                "type": "string",
+                "description": "Name of the value to set.",
+             },
+             "value": {
+                "type": ["boolean", "number", "string"],
+                "description": "Value to set.",
+             },
+        },
+    },
+    "requiredParams": ["key", "value"],
+}
+
+def setDefValue(parameters):
+    key = parameters["key"]
+    value = parameters["value"]
+
+    if key == "moveType":
+        if value not in ["JUMP", "LINEAR", "JOINTS"]:
+            return "Invalid value for moveType. Valid values are: JUMP, LINEAR, JOINTS"
+    elif key == "velocity":
+        if value < 0 or value > 100:
+            return "Invalid value for velocity. Valid values are: 0-100"
+    elif key == "acceleration":
+        if value < 0 or value > 1:
+            return "Invalid value for acceleration. Valid values are: 0-1"
+    elif key == "safe":
+        if value not in [True, False]:
+            return "Invalid value for safe. Valid values are: True, False"
+    #TODO: Check orientation 
+
+    FunctionHandler.defaultValues[key] = value
+
+    return "Default value was succesfully set!"
+
+
+
 saveTXTSpec = {
     "name": "saveTXT",
-    "description": "Saves text to file",
+    "description": "Saves text to file. If user wants to save program use \"./src/program_name.py\"  as file_path.",
     "parameters": {      
         "type": "object",  
         "properties": {
@@ -329,6 +394,32 @@ def saveTXT(parameters):
     except Exception as e:
         return (f"Error occured: {e}")
 
+
+runSavedProgramSpec = {
+    "name": "runSavedProgram",
+    "description": "Runs saved program. Programs are usually saved in ./src/program_name.py",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "file_path": {
+                "type": "string",
+                "description": "File path.",
+            },
+        },
+    },
+    "requiredParams": ["file_path"],
+}
+
+def runSavedProgram(parameters):
+    file_path = parameters["file_path"]
+    try:
+        # exec(open(file_path).read())
+        subprocess.run(["python", file_path])
+        return (f"Program was succesfully run! {file_path}")
+    except Exception as e:
+        return (f"Error occured: {e}")
+
+
 userGreetingSpec = {
     "name": "userGreeting",
     "description": "Greets the user using their name and constant text.",
@@ -349,6 +440,38 @@ def userGreeting(parameters):
     return f"Hello {name}! I am your virtual assistant. I will help you with your dailY Tasks. How can I help you today?"
 
 
+codeCreatorSpec = { 
+    "name": "codeCreator",
+    "description": "Returns specifics about how to write code for robot.",
+    "parameters": {      
+        "type": "object",  
+        "properties": {
+        },
+    },
+    "requiredParams": [],
+}
+
+def codeCreator(parameters):
+    string =  """When user talks about program, skript or python write code.  \
+        1. Write robust python scripts. Like you have to start robot if nessesary.\
+        2. If you have any question feel free to ask\
+        3. Workflow appears to be that you write me a program I validate it or adjust it. Then user can save it and run it. \
+        4. Please use this module.\
+        from module.robot import Robot\
+        class Robot:\
+        def Started(self)\
+        def Start(self)\
+        def Stop(self)\
+        def GetPose(self) # returns dictionary\
+        def PutPose(self, moveType, velocity, acceleration, safe, orientation, position) # moveType ("JUMP", "LINEAR", "JOINTS")\
+        def MoveHome(self)\
+        def Suck(self)\
+        def Release(self)\
+        def BeltSpeed(self, direction, velocity) # direction ("forward", "backward") velocity %\
+        def BeltDistance(self, direction, velocity, distance) # direction ("forward", "backward") velocity %\
+    """
+
+    return string
 
 
 class FunctionHandler:
@@ -401,14 +524,47 @@ class FunctionHandler:
             "Func": beltDistance,
             "Spec": beltDistanceSpec
         },
+        "getDefValues":  {
+            "Func": getDefValues,
+            "Spec": getDefValuesSpec
+        },
+        "setDefValue":  {
+            "Func": setDefValue,
+            "Spec": setDefValueSpec
+        },
+        "runSavedProgram":  {
+            "Func": runSavedProgram,
+            "Spec": runSavedProgramSpec
+        },
+        "codeCreator":  {
+            "Func": codeCreator,
+            "Spec": codeCreatorSpec
+        },
     }
+
+
+    defaultValues = {
+        'moveType': 'JUMP', # JUMP, LINEAR, JOINTS
+        'velocity': 50,
+        'acceleration': 0.5,
+        'safe': True,
+        'orientation': {
+            'w': 0,
+            'x': 1,
+            'y': 0,
+            'z': 0
+        },
+    }
+
         
     def __init__(self):
         pass
 
+
     def getAllSpecs(self):
         return [func_info["Spec"] for func_name, func_info in self.functions.items()]
     
+
     def HandleFunction(self, function_name, parameters):
         print("!!!"+function_name + " called!!! poggers :O ")
 

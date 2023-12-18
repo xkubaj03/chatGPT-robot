@@ -11,7 +11,7 @@ OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
 openai.api_key = OPENAI_API_KEY
 
-MAX_TOKENS = 150
+MAX_TOKENS = 250
 
 def log_message(log_file, message):
     try:
@@ -21,8 +21,11 @@ def log_message(log_file, message):
     except Exception as e:
         print(f"Error logging message: {e}")
 
+with open('./prompt.txt', 'r', encoding='utf-8') as file:
+    prompt = file.read()
+
 messages=[
-    {"role": "user", "content": "Write when ready. Please write short responses. "}
+    {"role": "user", "content": str({prompt})}
 ]
 
 Handler = functions.FunctionHandler()
