@@ -545,8 +545,8 @@ class FunctionHandler:
 
     defaultValues = {
         'moveType': 'JUMP', # JUMP, LINEAR, JOINTS
-        'velocity': 50,
-        'acceleration': 0.5,
+        'velocity': 100,
+        'acceleration': 100,
         'safe': True,
         'orientation': {
             'w': 0,
