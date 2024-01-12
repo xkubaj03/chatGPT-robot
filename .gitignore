@@ -1,6 +1,5 @@
 .env
 .idea
-assistant/logs/*
-assistant/functions/__pycache__
-assistant/src/module/__pycache__
+logs/*
+modules/__pycache__
 src/*
