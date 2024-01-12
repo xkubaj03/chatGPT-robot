@@ -3,3 +3,4 @@
 assistant/logs/*
 assistant/functions/__pycache__
 assistant/src/module/__pycache__
+src/*

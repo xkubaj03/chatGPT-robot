@@ -3,15 +3,16 @@ import openai
 from dotenv import load_dotenv
 import json
 import datetime
-from functions import functions
+from modules import functions
 import requests
 
 load_dotenv()
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
-
 openai.api_key = OPENAI_API_KEY
 
+
 MAX_TOKENS = 250
+
 
 def log_message(log_file, message):
     try:
@@ -21,18 +22,22 @@ def log_message(log_file, message):
     except Exception as e:
         print(f"Error logging message: {e}")
 
-with open('./prompt.txt', 'r', encoding='utf-8') as file:
+
+with open('./txt_sources/prompt.txt', 'r', encoding='utf-8') as file:
     prompt = file.read()
+
 
 messages=[
     {"role": "user", "content": str({prompt})}
 ]
 
+
 Handler = functions.FunctionHandler()
+
 
 def SendToChatGPT(messages):
     response = openai.ChatCompletion.create(
-        model="gpt-4",
+        model="gpt-3.5-turbo",
         messages = messages,
         functions = Handler.getAllSpecs(),
         max_tokens = MAX_TOKENS,
@@ -76,6 +81,7 @@ def SendToChatGPT(messages):
 
     return message
 
+
 def main():
     # Create Log
     current_time = datetime.datetime.now()
@@ -101,5 +107,6 @@ def main():
         user_input = input("Write prompt: ")
 
     log_message(log_filename, "Succesfully exited!")
+    
 if __name__ == "__main__":
     main()

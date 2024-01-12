@@ -1,0 +1,135 @@
+[
+   {
+      "name":"getDefValues",
+      "description":"Gets all default values for putPose function. And other saved poses.",
+      "parameters":{
+         "type":"object",
+         "properties":{
+            
+         }
+      },
+      "requiredParams":[
+         
+      ]
+   },
+   {
+      "name":"setDefValue",
+      "description":"Set specific default value for putPose function. And also save other poses.",
+      "parameters":{
+         "type":"object",
+         "properties":{
+            "key":{
+               "type":"string",
+               "description":"Name of the value to set."
+            },
+            "value":{
+               "type":[
+                  "boolean",
+                  "number",
+                  "string"
+               ],
+               "description":"Value to set."
+            }
+         }
+      },
+      "requiredParams":[
+         "key",
+         "value"
+      ]
+   },
+   {
+      "name":"saveTXT",
+      "description":"Saves text to file. If user wants to save program use \"./src/program_name.py\"  as file_path.",
+      "parameters":{
+         "type":"object",
+         "properties":{
+            "file_path":{
+               "type":"string",
+               "description":"File path"
+            },
+            "text":{
+               "type":"string",
+               "description":"Text to save"
+            }
+         }
+      },
+      "requiredParams":[
+         "file_path",
+         "text"
+      ]
+   },
+   {
+      "name":"getSavedPrograms",
+      "description":"Gets list of saved programs with last times they were changed.",
+      "parameters":{
+         "type":"object",
+         "properties":{
+
+         }
+      },
+      "requiredParams":[
+
+      ]
+   },
+   {
+      "name":"getSavedProgram",
+      "description":"Returns saved program.",
+      "parameters":{
+         "type":"object",
+         "properties":{
+            "file_path":{
+               "type":"string",
+               "description":"Program name"
+            }
+         }
+      },
+      "requiredParams":[
+         "file_path"
+      ]
+   },
+   {
+      "name":"runSavedProgram",
+      "description":"Runs saved program. Programs are usually saved in ./src/program_name.py",
+      "parameters":{
+         "type":"object",
+         "properties":{
+            "file_path":{
+               "type":"string",
+               "description":"File path."
+            }
+         }
+      },
+      "requiredParams":[
+         "file_path"
+      ]
+   },
+   {
+      "name":"codeCreator",
+      "description":"Returns specifics about how to write code for robot.",
+      "parameters":{
+         "type":"object",
+         "properties":{
+            
+         }
+      },
+      "requiredParams":[
+         
+      ]
+   },
+   {
+      "name":"userGreeting",
+      "description":"Greets the user using their name and constant text.",
+      "parameters":{
+         "type":"object",
+         "properties":{
+            "name":{
+               "type":"string",
+               "description":"User name"
+            }
+         }
+      },
+      "requiredParams":[
+         "name"
+      ]
+   }
+]

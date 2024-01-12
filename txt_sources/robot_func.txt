@@ -1,0 +1,179 @@
+[
+    {
+        "name": "started",
+        "description": "Checks if the robot is started",
+        "parameters": {      
+            "type": "object",  
+            "properties": {
+            }
+        },
+        "requiredParams": []
+    },
+    {
+        "name": "start",
+        "description": "Starts the robot",
+        "parameters": {      
+            "type": "object",  
+            "properties": {
+            }
+        },
+        "requiredParams": []
+    },
+    {
+        "name": "stop",
+        "description": "Stops the robot",
+        "parameters": {      
+            "type": "object",  
+            "properties": {
+            }
+        },
+        "requiredParams": []
+    },  
+    {
+        "name": "getPose",
+        "description": "Gets the robot's arm current position and orientation",
+        "parameters": {      
+            "type": "object",  
+            "properties": {
+            }
+        },
+        "requiredParams": []
+    },
+    {
+        "name": "putPose",
+        "description": "Sets the robot's arm position and orientation. If not mentioned use orientation from getDefValues. Set x as a single, pre-calculated number rounded to three decimal places. NOT like 0.3293115234375 - 0.02.",
+        "parameters": {      
+            "type": "object",  
+            "properties": {
+                "moveType": {
+                    "type": "string",
+                    "enum": ["JUMP", "LINEAR", "JOINTS"],
+                    "description": "Type of movement"
+                },
+                "pose": {
+                    "type": "object",
+                    "properties": {
+                        "orientation": {
+                            "type": "object",
+                            "properties": {
+                                "w": {
+                                    "type": "number"
+                                },
+                                "x": {
+                                    "type": "number"
+                                },
+                                "y": {
+                                    "type": "number"
+                                },
+                                "z": {
+                                    "type": "number"
+                                }
+                            }
+                        },
+                        "position": {
+                            "type": "object",
+                            "properties": {
+                                "x": {
+                                    "type": "number"
+                                },
+                                "y": {
+                                    "type": "number"
+                                },
+                                "z": {
+                                    "type": "number"
+                                }
+                            }                
+                        }
+                    }
+                    
+                },                
+                "velocity": {
+                    "type": "number",
+                    "description": "Velocity of movement in percentage"
+                },
+                "acceleration": {
+                    "type": "number",
+                    "description": "Acceleration of movement"
+                },
+                "safe": {
+                    "type": "boolean",
+                    "description": "If true, the robot will avoid obstacles in set environment"
+                }                
+            }
+        },
+        "requiredParams": ["moveType", "pose"]
+    },
+    {
+        "name": "putHome",
+        "description": "Moves the robot arm to home position",
+        "parameters": {      
+            "type": "object",  
+            "properties": {
+            }
+        },
+        "requiredParams": []
+    },
+    {
+        "name": "suck",
+        "description": "Turns on the vacuum on (holds object).",
+        "parameters": {      
+            "type": "object",  
+            "properties": {
+            }
+        },
+        "requiredParams": []
+    },
+    {
+        "name": "release",
+        "description": "Turns on the vacuum off (release object that arm holding).",
+        "parameters": {      
+            "type": "object",  
+            "properties": {
+            }
+        },
+        "requiredParams": []
+    },
+    {
+        "name": "beltSpeed",
+        "description": "Sets the belt speed and direction.",
+        "parameters": {      
+            "type": "object",  
+            "properties": {
+                "direction": {
+                    "type": "string",
+                    "enum": ["forward", "backward"],
+                    "description": "Type of movement"
+                },
+                "velocity": {
+                    "type": "number",
+                    "description": "Velocity of movement in percentage"
+                }
+            },
+            "requiredParams": ["direction", "velocity"]
+        }
+    },
+    {
+        "name": "beltDistance",
+        "description": "Sets the belt, distance and direction.",
+        "parameters": {      
+            "type": "object",  
+            "properties": {
+                "direction": {
+                    "type": "string",
+                    "enum": ["forward", "backward"],
+                    "description": "Type of movement"
+                },
+                "velocity": {
+                    "type": "number",
+                    "description": "Velocity of movement in percentage"
+                },
+                "distance": {
+                    "type": "number",
+                    "description": "Distance of movement in meters"
+                }
+            },
+            "requiredParams": ["direction", "velocity", "distance"]
+        }
+    }
+
+]
