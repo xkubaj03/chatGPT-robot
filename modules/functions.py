@@ -91,19 +91,23 @@ class FunctionHandler:
         if ("moveType" not in parameters) or ("pose" not in parameters):
             return "Missing required parameter: moveType or pose"
 
-        """robot.Pose(
-            parameters["pose"]["orientation"]["w"], 
-            parameters["pose"]["orientation"]["x"], 
-            parameters["pose"]["orientation"]["y"], 
-            parameters["pose"]["orientation"]["z"], 
-            parameters["pose"]["position"]["x"], 
-            parameters["pose"]["position"]["y"], 
-            parameters["pose"]["position"]["z"]
-        )  """      
+        tmp = robot.Pose(
+            robot.Position(
+                parameters["pose"]["position"]["x"], 
+                parameters["pose"]["position"]["y"], 
+                parameters["pose"]["position"]["z"]
+            ),
+            robot.Orientation(
+                parameters["pose"]["orientation"]["w"], 
+                parameters["pose"]["orientation"]["x"], 
+                parameters["pose"]["orientation"]["y"], 
+                parameters["pose"]["orientation"]["z"]            
+            )                           
+        )        
 
 
         return self.robot.PutPose(
-            parameters["pose"], 
+            tmp, 
             parameters["moveType"], 
             parameters.get("velocity", "none"), 
             parameters.get("acceleration", "none"), 

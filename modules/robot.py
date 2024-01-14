@@ -8,24 +8,55 @@ load_dotenv()
 
 class Pose:
     def __init__(self, position, orientation):
+        if type(position) is not Position:
+            raise Exception("Position must be of type Position")
+        
+        if type(orientation) is not Orientation:
+            raise Exception("Orientation must be of type Orientation")
+        
         self.position = position
         self.orientation = orientation
+        
+
+    def to_dict(self):
+        return {
+            "position": self.position.to_dict(),
+            "orientation": self.orientation.to_dict()
+        }
+    
+    def __str__(self):
+        return json.dumps(self.to_dict(), indent=4)
 
 
 class Position:
     def __init__(self, x, y, z):
-        self.x = x
-        self.y = y
-        self.z = z
+        self.x = float(x)
+        self.y = float(y)
+        self.z = float(z)
+    
+    def to_dict(self):
+        return {
+            "x": self.x,
+            "y": self.y,
+            "z": self.z
+        }
 
 
 class Orientation:
     def __init__(self, w, x, y, z):
-        self.w = w
-        self.x = x
-        self.y = y
-        self.z = z
+        self.w = float(w)
+        self.x = float(x)
+        self.y = float(y)
+        self.z = float(z)
 
+
+    def to_dict(self):
+        return {
+            "w": self.w,
+            "x": self.x,
+            "y": self.y,
+            "z": self.z
+        }
 
 class Robot:
     robot_url = ""
@@ -87,10 +118,26 @@ class Robot:
     def GetPose(self):
         response = requests.get(self.robot_url + "/eef/pose")
 
-        return json.loads(response.text)
+        tmp = json.loads(response.text)
+
+        return Pose(
+            Position(
+                tmp['position']['x'], 
+                tmp['position']['y'], 
+                tmp['position']['z']
+            ), 
+            Orientation(
+                tmp['orientation']['w'], 
+                tmp['orientation']['x'], 
+                tmp['orientation']['y'], 
+                tmp['orientation']['z']
+            )
+        )
     
 
     def PutPose(self, pose, moveType, velocity="none", acceleration="none", safe="none"):
+        if type(pose) is not Pose:
+            raise Exception("Pose must be of type Pose")
 
         full_url = f"{self.robot_url}/eef/pose?moveType={moveType}"
 
@@ -103,7 +150,7 @@ class Robot:
         if safe != "none":
             full_url += f"&safe={safe}"
 
-        response = requests.put(full_url, json=pose, headers={'Content-Type': 'application/json'})
+        response = requests.put(full_url, json=pose.to_dict(), headers={'Content-Type': 'application/json'})
 
 
         if response.text != "":
@@ -131,6 +178,7 @@ class Robot:
         
         return response.text
 
+
     def Release(self):
         response = requests.put(self.robot_url + "/release", headers={'accept': '*/*'})
 
@@ -138,8 +186,7 @@ class Robot:
                 return "Released!"
         
         return response.text
-
-        
+   
 
     def BeltSpeed(self, direction, velocity): 
         full_url = f"{self.robot_url}/conveyor/speed?velocity={velocity}&direction={direction}"
