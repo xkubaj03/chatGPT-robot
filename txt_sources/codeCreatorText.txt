@@ -9,11 +9,46 @@ def Started(self)
 def Start(self)
 def Stop(self)
 def GetPose(self) # returns dictionary
-def PutPose(self, moveType, pose, velocity, acceleration, safe) 
+def PutPose(self, pose, moveType, velocity, acceleration, safe) 
 # moveType ("JUMP", "LINEAR", "JOINTS")
-# pose T - JSON structure represents a 3D object with its orientation (defined by quaternion components w, x, y, z) and position (specified by coordinates x, y, z) in a 3D space.
+# pose class containing class position(x,y,z) and class orientation (w,x,y,z)
 def MoveHome(self)
 def Suck(self)
 def Release(self)
 def BeltSpeed(self, direction, velocity) # direction ("forward", "backward") velocity %
 def BeltDistance(self, direction, velocity, distance) # direction ("forward", "backward") velocity % 
+
+Sample prompt:
+Napiš program, který: Načte současnou pozici jako cílovou pozici p. Nejprve se přesuň 1 cm vzhůru ze současné pozice a potom se přesune na cílovou pozici p.
+
+Sample code:
+"import modules.robot as robot
+
+p = robot.Pose(
+    robot.Position(
+        0.21702429197003742,
+        -0.008250894907979447,
+        -0.027944581488834414
+        ), 
+    robot.Orientation(
+        5.844293933746912e-17,
+        -0.29838488198977153,
+        0.9544456308244855,
+        -1.8270804532136722e-17
+        )
+    )
+
+r1 = robot.Robot()
+
+if not r1.Started():
+    r1.Start()
+
+h = r1.GetPose()
+
+h.position.z += 0.01
+
+r1.PutPose(h, "LINEAR", 100, 100, True)
+
+r1.PutPose(p, "LINEAR", 100, 100, True)
+"
+Don't reply to this message.

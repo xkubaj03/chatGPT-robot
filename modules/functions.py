@@ -54,8 +54,8 @@ class FunctionHandler:
             self.functionSpecs.extend(json.loads(json_data))
 
         #set up code creator text
-            with open('./txt_sources/codeCreatorText.txt', 'r', encoding='utf-8') as file:
-                self.codeCreatorText = file.read()
+        with open('./txt_sources/codeCreatorText.txt', 'r', encoding='utf-8') as file:
+            self.codeCreatorText = file.read()
  
 
     def getAllSpecs(self):
@@ -199,7 +199,7 @@ class FunctionHandler:
             return (f"Error occured: {e}")
 
 
-    def runSavedProgram(self, parameters):
+    def runSavedProgram(self, parameters): #TODO Check how it went
         file_path = parameters["file_path"]
         try:
             subprocess.run(["python", file_path])
