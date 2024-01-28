@@ -9,10 +9,10 @@ import requests
 load_dotenv()
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 openai.api_key = OPENAI_API_KEY
+MODEL = os.getenv('MODEL')
 
-
-MAX_TOKENS = 250
-
+MAX_TOKENS = 800
+TotalTokens = 0
 
 def log_message(log_file, message):
     try:
@@ -37,13 +37,15 @@ Handler = functions.FunctionHandler()
 
 def SendToChatGPT(messages):
     response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
+        model= MODEL,
         messages = messages,
         functions = Handler.getAllSpecs(),
         max_tokens = MAX_TOKENS,
     )
     
     token_usage = response['usage']['completion_tokens']
+    global TotalTokens 
+    TotalTokens = response['usage']['total_tokens']
     print(f"Token usage: {token_usage}")
     if token_usage >= MAX_TOKENS:
         print("!!! WARNING !!!!  Max tokens exceeded!")
@@ -106,7 +108,7 @@ def main():
         print(resp)
         user_input = input("Write prompt: ")
 
-    log_message(log_filename, "Succesfully exited!")
+    log_message(log_filename, "Succesfully exited!, Total tokens used: " + str(TotalTokens) + ", GPT: " + str(MODEL))
     
 if __name__ == "__main__":
     main()

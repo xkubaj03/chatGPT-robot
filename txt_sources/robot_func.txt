@@ -105,7 +105,7 @@
     },
     {
         "name": "putHome",
-        "description": "Moves the robot arm to home position",
+        "description": "Calibrates robot arm",
         "parameters": {      
             "type": "object",  
             "properties": {
@@ -135,7 +135,7 @@
     },
     {
         "name": "beltSpeed",
-        "description": "Sets the belt speed and direction.",
+        "description": "Moves the belt in certain speed and direction.",
         "parameters": {      
             "type": "object",  
             "properties": {
@@ -154,7 +154,7 @@
     },
     {
         "name": "beltDistance",
-        "description": "Sets the belt, distance and direction.",
+        "description": "Moves the belt in certain, distance, velocity and direction.",
         "parameters": {      
             "type": "object",  
             "properties": {

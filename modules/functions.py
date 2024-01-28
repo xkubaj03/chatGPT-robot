@@ -17,15 +17,54 @@ class FunctionHandler:
     robot: robot.Robot
 
     defaultValues = {
-            'moveType': 'JUMP', # JUMP, LINEAR, JOINTS
-            'velocity': 100,
-            'acceleration': 100,
-            'safe': True,
-            'orientation': {
-                'w': 0,
-                'x': 1,
-                'y': 0,
-                'z': 0
+            "moveType": "JUMP", # JUMP, LINEAR, JOINTS
+            "velocity": 100,
+            "acceleration": 100,
+            "safe": True,
+            "orientation": {
+                "w": 0,
+                "x": 1,
+                "y": 0,
+                "z": 0
+            },
+            "platform_A": {
+                "position": {
+                    "x": 0.014,
+                    "y": -0.293,
+                    "z": -0.104
+                },
+                "orientation": {
+                    "w": 0,
+                    "x": -0.691,
+                    "y": 0.723,
+                    "z": 0
+                }
+            },
+            "platform_B": {
+                "position": {
+                    "x": 0.0903,
+                    "y": -0.281,
+                    "z": -0.1038
+                },
+                "orientation": {
+                    "w": 0,
+                    "x": -0.59,
+                    "y": 0.807,
+                    "z": 0
+                }
+            },
+            "beltPosition": {
+                "position": {
+                    "x": 0.325,
+                    "y": -0.021,
+                    "z": -0.047
+                },
+                "orientation": {
+                    "w": 0,
+                    "x": -0.59,
+                    "y": 0.807,
+                    "z": 0
+                }
             },
         }
 
@@ -199,13 +238,22 @@ class FunctionHandler:
             return (f"Error occured: {e}")
 
 
-    def runSavedProgram(self, parameters): #TODO Check how it went
+    def runSavedProgram(self, parameters):
         file_path = parameters["file_path"]
+        
         try:
-            subprocess.run(["python", file_path])
-            return (f"Program was succesfully run! {file_path}")
+            result = subprocess.run(["python", file_path], capture_output=True, text=True)
+            
+            if result.returncode == 0:
+                output = result.stdout
+                return f"Program was successfully run! Output:\n{output}"
+            
+            else:
+                error = result.stderr
+                return f"Program exited with errors. Error:\n{error}"
+            
         except Exception as e:
-            return (f"Error occured: {e}")
+            return f"Error occurred: {e}"
 
 
     def userGreeting(self, parameters):

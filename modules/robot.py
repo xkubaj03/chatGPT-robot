@@ -118,6 +118,9 @@ class Robot:
     def GetPose(self):
         response = requests.get(self.robot_url + "/eef/pose")
 
+        if response.status_code != 200:
+            return response.text #TODO: raise exception or what?
+
         tmp = json.loads(response.text)
 
         return Pose(
@@ -200,6 +203,10 @@ class Robot:
 
 
     def BeltDistance(self, direction, velocity, distance):
+        direction = direction.lower()
+        if direction != "forward" and direction != "backwards":
+            return ("Direction must be either 'forward' or 'backwards'")
+
         full_url = f"{self.robot_url}/conveyor/distance?velocity={velocity}&direction={direction}&distance={distance}"
 
         response = requests.put(full_url, headers={'accept': '*/*'})

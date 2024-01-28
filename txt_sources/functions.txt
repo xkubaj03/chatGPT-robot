@@ -105,7 +105,7 @@
    },
    {
       "name":"codeCreator",
-      "description":"Returns specifics about how to write code for robot.",
+      "description":"Use this function for generating robot programming code. Activate this function when the user specifically requests program or code creation for a robot. Look for keywords such as 'programming', 'robot code', 'script creation', or similar phrases. This function should provide detailed guidance on coding standards, syntax, and structure specific to our robot's software framework. It should be used only in contexts where detailed programming guidance is necessary and should provide clear, concise instructions for coding.",
       "parameters":{
          "type":"object",
          "properties":{
