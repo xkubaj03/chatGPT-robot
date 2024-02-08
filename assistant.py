@@ -47,6 +47,7 @@ def SendToChatGPT(messages):
     global TotalTokens 
     TotalTokens = response['usage']['total_tokens']
     print(f"Token usage: {token_usage}")
+
     if token_usage >= MAX_TOKENS:
         print("!!! WARNING !!!!  Max tokens exceeded!")
 
@@ -60,18 +61,14 @@ def SendToChatGPT(messages):
             print(message)
 
         function_name = response.choices[0]['message']['function_call']['name']
+
         try:
             arguments = json.loads(response.choices[0]['message']['function_call']['arguments'])
 
             response = Handler.HandleFunction(function_name, arguments)
-        except json.JSONDecodeError: # TODO: For some reason json.loads doesn't work because last "}" always missing
-            print("Invalid JSON!")   # I think that it was because i set max_tokens to 100
+        except json.JSONDecodeError:
+            print("Invalid JSON!")  
             print(response.choices[0]['message']['function_call']['arguments'])
-            exit()
-            #response = "Invalid JSON! Can you please try again with correct one?" 
-            arguments = json.loads(response.choices[0]['message']['function_call']['arguments'] + "\n}")
-
-            response = Handler.HandleFunction(function_name, arguments)
 
         messages.append({"role": "function", "name": function_name, "content": response})        
         log_message(log_filename, str(json.dumps({"role": "function", "name": function_name, "content": response}, indent=4)))

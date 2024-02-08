@@ -74,7 +74,7 @@ class FunctionHandler:
         FunctionSpecs = False
 
         try:
-            self.robot = robot.Robot(ROBOT_URL)
+            self.robot = robot.Robot(ROBOT_URL, "assistant")
             FunctionSpecs = True
 
         except Exception as e:
