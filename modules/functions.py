@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 import os
 from datetime import datetime
 import subprocess
-import modules.robot as robot
+import modules.robot as r
 
 
 load_dotenv()
@@ -14,7 +14,7 @@ ROBOT_URL = os.getenv('ROBOT_URL')
 class FunctionHandler:
     codeCreatorText = ""
     functionSpecs = []
-    robot: robot.Robot
+    robot: r.Robot
 
     defaultValues = {
             "moveType": "JUMP", # JUMP, LINEAR, JOINTS
@@ -74,7 +74,7 @@ class FunctionHandler:
         FunctionSpecs = False
 
         try:
-            self.robot = robot.Robot(ROBOT_URL, "assistant")
+            self.robot = r.Robot(ROBOT_URL, "assistant")
             FunctionSpecs = True
 
         except Exception as e:
@@ -92,7 +92,7 @@ class FunctionHandler:
          
             self.functionSpecs.extend(json.loads(json_data))
 
-        #set up code creator text
+        #set up code creator text TODO: delete this I guess..
         with open('./txt_sources/codeCreatorText.txt', 'r', encoding='utf-8') as file:
             self.codeCreatorText = file.read()
  
@@ -104,11 +104,10 @@ class FunctionHandler:
     def HandleFunction(self, function_name, parameters):
         print("!!!" + function_name + " called!!! poggers :O ")
 
-        if function_name in self.functions:
-            return self.functions[function_name](self, parameters)
-        else:
+        if function_name not in self.functions:
             raise Exception(f"Function {function_name} not found!")
         
+        return self.functions[function_name](self, parameters)
 
     def started(self, parameter):
         return str(self.robot.Started())
@@ -127,16 +126,24 @@ class FunctionHandler:
 
 
     def putPose(self, parameters):
-        if ("moveType" not in parameters) or ("pose" not in parameters):
-            return "Missing required parameter: moveType or pose"
+        if "moveType" not in parameters:
+            return "Missing required parameter (moveType)"
+        
+        if "pose" not in parameters:
+            return "Missing required parameter (pose)"
+        
+        if "position" not in parameters["pose"] or \
+            "orientation" not in parameters["pose"]:
+            return "Pose missing required (position or orientation)"
+    
 
-        tmp = robot.Pose(
-            robot.Position(
+        pose = r.Pose(
+            r.Position(
                 parameters["pose"]["position"]["x"], 
                 parameters["pose"]["position"]["y"], 
                 parameters["pose"]["position"]["z"]
             ),
-            robot.Orientation(
+            r.Orientation(
                 parameters["pose"]["orientation"]["w"], 
                 parameters["pose"]["orientation"]["x"], 
                 parameters["pose"]["orientation"]["y"], 
@@ -146,7 +153,7 @@ class FunctionHandler:
 
 
         return self.robot.PutPose(
-            tmp, 
+            pose, 
             parameters["moveType"], 
             parameters.get("velocity", "none"), 
             parameters.get("acceleration", "none"), 
@@ -167,10 +174,25 @@ class FunctionHandler:
 
 
     def beltSpeed(self, parameters):
+        if "direction" not in parameters:
+            return "Missing required parameter (direction)"
+        
+        if "velocity" not in parameters:
+            return "Missing required parameter (velocity)"
+        
         return self.robot.BeltSpeed(parameters["direction"], parameters["velocity"])
 
 
     def beltDistance(self, parameters):
+        if "direction" not in parameters:
+            return "Missing required parameter (direction)"
+        
+        if "velocity" not in parameters:
+            return "Missing required parameter (velocity)"
+        
+        if "distance" not in parameters:
+            return "Missing required parameter (distance)"
+        
         return self.robot.BeltDistance(parameters["direction"], parameters["velocity"], parameters["distance"])
 
 
@@ -202,12 +224,18 @@ class FunctionHandler:
 
 
     def saveTXT(self, parameters):
-        file_path = parameters["file_path"]
-        text = parameters["text"]
+        if "file_path" not in parameters:
+            return "Missing required parameter (file_path)"
+        
+        if "text" not in parameters:
+            return "Missing required parameter (text)"
+        
         try:
-            with open(file_path, 'w') as file:
-                file.write(text)
-            return (f"Text was succesfully saved! {file_path}")
+            with open(parameters["file_path"], 'w') as file:
+                file.write(parameters["text"])
+
+            return (f"Text was succesfully saved! {parameters["file_path"]}")
+        
         except Exception as e:
             return (f"Error occured: {e}")
 
@@ -229,6 +257,9 @@ class FunctionHandler:
     
 
     def getSavedProgram(self, parameters):
+        if "file_path" not in parameters:
+            return "Missing required parameter (file_path)"
+        
         file_path = "./src/" + parameters["file_path"]
         try:
             with open(file_path, 'r') as file:
@@ -239,6 +270,9 @@ class FunctionHandler:
 
 
     def runSavedProgram(self, parameters):
+        if "file_path" not in parameters:
+            return "Missing required parameter (file_path)"
+        
         file_path = parameters["file_path"]
         
         try:
@@ -255,12 +289,7 @@ class FunctionHandler:
         except Exception as e:
             return f"Error occurred: {e}"
 
-
-    def userGreeting(self, parameters):
-        name = parameters["name"]
-        return f"Hello {name}! I am your virtual assistant. I will help you with your dailY Tasks. How can I help you today?"
-
-
+    #TODO: delete this I guess...
     def codeCreator(self, parameters):
         return self.codeCreatorText
 
@@ -276,7 +305,6 @@ class FunctionHandler:
         "release": release,
         "beltSpeed": beltSpeed,
         "beltDistance": beltDistance,
-        "userGreeting": userGreeting,
         "getDefValues": getDefValues,
         "setDefValue": setDefValue,
         "codeCreator": codeCreator,
