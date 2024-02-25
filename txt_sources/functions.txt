@@ -1,43 +1,5 @@
 [
    {
-      "name":"getDefValues",
-      "description":"Gets all default values for putPose function. And other saved poses.",
-      "parameters":{
-         "type":"object",
-         "properties":{
-            
-         }
-      },
-      "requiredParams":[
-         
-      ]
-   },
-   {
-      "name":"setDefValue",
-      "description":"Set specific default value for putPose function. And also save other poses.",
-      "parameters":{
-         "type":"object",
-         "properties":{
-            "key":{
-               "type":"string",
-               "description":"Name of the value to set."
-            },
-            "value":{
-               "type":[
-                  "boolean",
-                  "number",
-                  "string"
-               ],
-               "description":"Value to set."
-            }
-         }
-      },
-      "requiredParams":[
-         "key",
-         "value"
-      ]
-   },
-   {
       "name":"saveTXT",
       "description":"Saves text to file. If user wants to save program use \"./src/program_name.py\"  as file_path.",
       "parameters":{
@@ -101,35 +63,6 @@
       },
       "requiredParams":[
          "file_path"
-      ]
-   },
-   {
-      "name":"codeCreator",
-      "description":"Use this function for generating robot programming code. Activate this function when the user specifically requests program or code creation for a robot. Look for keywords such as 'programming', 'robot code', 'script creation', or similar phrases. This function should provide detailed guidance on coding standards, syntax, and structure specific to our robot's software framework. It should be used only in contexts where detailed programming guidance is necessary and should provide clear, concise instructions for coding.",
-      "parameters":{
-         "type":"object",
-         "properties":{
-            
-         }
-      },
-      "requiredParams":[
-         
-      ]
-   },
-   {
-      "name":"userGreeting",
-      "description":"Greets the user using their name and constant text.",
-      "parameters":{
-         "type":"object",
-         "properties":{
-            "name":{
-               "type":"string",
-               "description":"User name"
-            }
-         }
-      },
-      "requiredParams":[
-         "name"
       ]
    }
 ]

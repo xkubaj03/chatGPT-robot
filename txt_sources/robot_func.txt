@@ -41,7 +41,7 @@
     },
     {
         "name": "putPose",
-        "description": "Sets the robot's arm position and orientation. If not mentioned use orientation from getDefValues. Set x as a single, pre-calculated number rounded to three decimal places. NOT like 0.3293115234375 - 0.02.",
+        "description": "Sets the robot's arm position and orientation. If not mentioned use orientation from getDefValues. Set coordinates as a single, pre-calculated number rounded to three decimal places. NOT like 0.3293115234375 - 0.02.",
         "parameters": {      
             "type": "object",  
             "properties": {
