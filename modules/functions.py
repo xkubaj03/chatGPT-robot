@@ -10,9 +10,12 @@ import modules.robot as r
 
 load_dotenv()
 ROBOT_URL = os.getenv('ROBOT_URL')
+DEBUG = int(os.getenv('DEBUG'))
 
 class FunctionHandler:
     codeCreatorText = ""
+    prompt_message = ""
+    welcome_message = ""
     functionSpecs = []
     robot: r.Robot
 
@@ -95,14 +98,29 @@ class FunctionHandler:
         #set up code creator text TODO: delete this I guess..
         with open('./txt_sources/codeCreatorText.txt', 'r', encoding='utf-8') as file:
             self.codeCreatorText = file.read()
+
+        
+        with open('./txt_sources/prompt.txt', 'r', encoding='utf-8') as file:
+            self.prompt_message = file.read()
+
+        
+        with open('./txt_sources/intro.txt', 'r', encoding='utf-8') as file:
+            self.welcome_message = file.read()
  
 
     def getAllSpecs(self):
         return self.functionSpecs
-        
+
+    
+    def getPrompt_message(self):
+        return self.prompt_message
+    
+    def getWelcome_message(self):
+        return self.welcome_message
     
     def HandleFunction(self, function_name, parameters):
-        print("!!!" + function_name + " called!!! poggers :O ")
+        if(DEBUG > 0):
+            print("!!!" + function_name + " called!!! poggers :O ")
 
         if function_name not in self.functions:
             raise Exception(f"Function {function_name} not found!")
@@ -195,11 +213,11 @@ class FunctionHandler:
         
         return self.robot.BeltDistance(parameters["direction"], parameters["velocity"], parameters["distance"])
 
-
+    #TODO: delete this I guess...
     def getDefValues(self, parameters):
         return json.dumps(FunctionHandler.defaultValues)
 
-
+    #TODO: delete this I guess...
     def setDefValue(self, parameters):
         key = parameters["key"]
         value = parameters["value"]
@@ -230,11 +248,19 @@ class FunctionHandler:
         if "text" not in parameters:
             return "Missing required parameter (text)"
         
+        # Static check for program
+        if parameters["file_path"].endswith(".py"):
+            if "import modules.robot as robot" not in parameters["text"]:
+                return "Program must contain \"import modules.robot as robot\""
+
+            if "= robot.Robot()" not in parameters["text"]:
+                return "Program must contain robot initialization: \"r = robot.Robot()\""
+
         try:
-            with open(parameters["file_path"], 'w') as file:
+            with open(parameters["file_path"], 'w', encoding="utf-8") as file:
                 file.write(parameters["text"])
 
-            return (f"Text was succesfully saved! {parameters["file_path"]}")
+            return (f'Text was succesfully saved! {parameters["file_path"]}')
         
         except Exception as e:
             return (f"Error occured: {e}")
@@ -260,9 +286,13 @@ class FunctionHandler:
         if "file_path" not in parameters:
             return "Missing required parameter (file_path)"
         
-        file_path = "./src/" + parameters["file_path"]
+        file_path = parameters["file_path"]
+
+        if "./src/" not in file_path:
+            file_path = "./src/" + file_path
+
         try:
-            with open(file_path, 'r') as file:
+            with open(file_path, 'r', encoding="utf-8") as file:
                 return file.read()
             
         except Exception as e:
@@ -274,6 +304,9 @@ class FunctionHandler:
             return "Missing required parameter (file_path)"
         
         file_path = parameters["file_path"]
+
+        if "./src/" not in file_path:
+            file_path = "./src/" + file_path
         
         try:
             result = subprocess.run(["python", file_path], capture_output=True, text=True)

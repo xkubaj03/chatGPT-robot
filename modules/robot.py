@@ -8,11 +8,11 @@ load_dotenv()
 
 class Pose:
     def __init__(self, position, orientation):
-        if type(position) is not Position:
-            raise Exception("Position must be of type Position")
+        if not isinstance(position, Position):
+            raise Exception("1st parameter position must be of type Position")
         
-        if type(orientation) is not Orientation:
-            raise Exception("Orientation must be of type Orientation")
+        if not isinstance(orientation, Orientation):
+            raise Exception("2nd parameter orientation must be of type Orientation")
         
         self.position = position
         self.orientation = orientation
@@ -40,6 +40,9 @@ class Position:
             "y": self.y,
             "z": self.z
         }
+    
+    def __str__(self):
+        return json.dumps(self.to_dict(), indent=4)
 
 
 class Orientation:
@@ -57,6 +60,10 @@ class Orientation:
             "y": self.y,
             "z": self.z
         }
+    
+    def __str__(self):
+        return json.dumps(self.to_dict(), indent=4)
+
 
 class Robot:
     robot_url = ""
