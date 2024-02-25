@@ -1,0 +1,11 @@
+Jaká je aktuální pozice robota?
+exit
+
+Můžeš se posunout o 5cm vlevo?
+exit
+
+Napiš program který udělá kalibraci a posune se o 5 cm doleva
+exit
+
+Vytvoř kód který posune pás 5x o 10cm vpřed.
+exit

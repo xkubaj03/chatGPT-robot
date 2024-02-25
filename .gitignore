@@ -3,3 +3,4 @@
 logs/*
 modules/__pycache__
 src/*
+test_logs/*
