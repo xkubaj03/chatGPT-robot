@@ -1,22 +1,14 @@
-from typing import Self
-import requests
 import json
-from dotenv import load_dotenv
 import os
 from datetime import datetime
 import subprocess
 import modules.robot as r
 
 
-load_dotenv()
-ROBOT_URL = os.getenv('ROBOT_URL')
-DEBUG = int(os.getenv('DEBUG'))
-
 class FunctionHandler:
-    codeCreatorText = ""
     prompt_message = ""
     welcome_message = ""
-    functionSpecs = []
+    function_specs = []
     robot: r.Robot
 
     defaultValues = {
@@ -72,13 +64,16 @@ class FunctionHandler:
         }
 
 
-    def __init__(self):
+    def __init__(self, debug, url):
+        self.debug = debug
+        self.url = url
+
         #set up robot
-        FunctionSpecs = False
+        function_specs = False
 
         try:
-            self.robot = r.Robot(ROBOT_URL, "assistant")
-            FunctionSpecs = True
+            self.robot = r.Robot(url, "assistant")
+            function_specs = True
 
         except Exception as e:
             print(f"Failed to connect to the Robot: {e} \nAssistent is unable to control the robot!")
@@ -87,17 +82,13 @@ class FunctionHandler:
         with open('./txt_sources/functions.txt', 'r', encoding='utf-8') as file:
             json_data = file.read()
 
-        self.functionSpecs = json.loads(json_data)
+        self.function_specs = json.loads(json_data)
 
-        if FunctionSpecs:
+        if function_specs:
             with open('./txt_sources/robot_func.txt', 'r', encoding='utf-8') as file:
                 json_data = file.read()
          
-            self.functionSpecs.extend(json.loads(json_data))
-
-        #set up code creator text TODO: delete this I guess..
-        with open('./txt_sources/codeCreatorText.txt', 'r', encoding='utf-8') as file:
-            self.codeCreatorText = file.read()
+            self.function_specs.extend(json.loads(json_data))
 
         
         with open('./txt_sources/prompt.txt', 'r', encoding='utf-8') as file:
@@ -109,17 +100,17 @@ class FunctionHandler:
  
 
     def getAllSpecs(self):
-        return self.functionSpecs
+        return self.function_specs
 
     
     def getPrompt_message(self):
         return self.prompt_message
     
-    def getWelcome_message(self):
+    def get_welcome_message(self):
         return self.welcome_message
     
     def HandleFunction(self, function_name, parameters):
-        if(DEBUG > 0):
+        if(self.debug > 0):
             print("!!!" + function_name + " called!!! poggers :O ")
 
         if function_name not in self.functions:
@@ -213,34 +204,6 @@ class FunctionHandler:
         
         return self.robot.BeltDistance(parameters["direction"], parameters["velocity"], parameters["distance"])
 
-    #TODO: delete this I guess...
-    def getDefValues(self, parameters):
-        return json.dumps(FunctionHandler.defaultValues)
-
-    #TODO: delete this I guess...
-    def setDefValue(self, parameters):
-        key = parameters["key"]
-        value = parameters["value"]
-
-        if key == "moveType":
-            if value not in ["JUMP", "LINEAR", "JOINTS"]:
-                return "Invalid value for moveType. Valid values are: JUMP, LINEAR, JOINTS"
-        elif key == "velocity":
-            if value < 0 or value > 100:
-                return "Invalid value for velocity. Valid values are: 0-100"
-        elif key == "acceleration":
-            if value < 0 or value > 1:
-                return "Invalid value for acceleration. Valid values are: 0-1"
-        elif key == "safe":
-            if value not in [True, False]:
-                return "Invalid value for safe. Valid values are: True, False"
-        #TODO: Check orientation 
-
-        FunctionHandler.defaultValues[key] = value
-
-        return "Default value was succesfully set!"
-
-
     def saveTXT(self, parameters):
         if "file_path" not in parameters:
             return "Missing required parameter (file_path)"
@@ -322,11 +285,7 @@ class FunctionHandler:
         except Exception as e:
             return f"Error occurred: {e}"
 
-    #TODO: delete this I guess...
-    def codeCreator(self, parameters):
-        return self.codeCreatorText
-
-
+ 
     functions = {
         "started": started,        
         "start": start,
@@ -338,9 +297,6 @@ class FunctionHandler:
         "release": release,
         "beltSpeed": beltSpeed,
         "beltDistance": beltDistance,
-        "getDefValues": getDefValues,
-        "setDefValue": setDefValue,
-        "codeCreator": codeCreator,
         "runSavedProgram": runSavedProgram,
         "saveTXT": saveTXT,      
         "getSavedPrograms": getSavedPrograms,
