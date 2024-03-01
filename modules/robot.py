@@ -1,18 +1,20 @@
 from dotenv import load_dotenv
+from enum import Enum
 import os
 import requests
 import json
 
 load_dotenv()
+URL = os.getenv('ROBOT_URL')
 
 
 class Pose:
     def __init__(self, position, orientation):
         if not isinstance(position, Position):
-            raise Exception("1st parameter position must be of type Position")
+            raise ValueError("1st parameter position must be of type Position")
         
         if not isinstance(orientation, Orientation):
-            raise Exception("2nd parameter orientation must be of type Orientation")
+            raise ValueError("2nd parameter orientation must be of type Orientation")
         
         self.position = position
         self.orientation = orientation
@@ -65,17 +67,42 @@ class Orientation:
         return json.dumps(self.to_dict(), indent=4)
 
 
+class Mode(Enum):
+    """
+    Modes for robot (only difference is in error handling) 
+    """
+
+    DEFAULT = "default"
+    ASSISTANT = "assistant"
+
+
+def check_response(response, mode):
+    """
+    returns message and error (True if error, False if not)
+    """
+
+    if 200 <= response.status_code < 300:
+        if response.text == "":
+            return "Success!", False
+        
+        return response.text, False
+    
+    if mode == Mode.DEFAULT:
+        raise requests.exceptions.HTTPError(f"Robot is not running as expected. Error: {response.text}")
+    
+    else:
+        return (f"Robot is not running as expected. Error: {response.text}"), True
+    
+
 class Robot:
     robot_url = ""
-    type = "" 
+    mode: Mode = Mode.DEFAULT
 
-    def __init__(self, url = os.getenv('ROBOT_URL'), type = "default"): 
-        if type != "default" and type != "assistant":
-            raise Exception("Type must be either 'default' or 'assistant'")
-        
+    def __init__(self, url = URL, mode = Mode.DEFAULT): 
         self.robot_url = url
-        self.type = type
+        self.mode = mode
 
+        # Check connection to robot
         try:
             response = requests.get(self.robot_url + "/state/started")
 
@@ -86,24 +113,21 @@ class Robot:
             raise Exception(f"Failed to connect to the Robot: {e}")
             
 
-    def Started(self):
+    def started(self):
         response = requests.get(self.robot_url + "/state/started")
 
+        msg, err = check_response(response, self.mode)
 
-        if self.type == "default" and response.status_code != 200:
-            raise Exception(f"Robot is not running as expected. Error: {response.text}")
-                    
-        if self.type == "assistant" and response.status_code != 200:
-             return (f"Robot is not running as expected.  Error: {response.text}")
+        if err:
+            return msg
 
-
-        if response.text == "true\n":
+        if msg == "true\n":
             return True
         else:
             return False
     
 
-    def Start(self):
+    def start(self):
         data = {
             "orientation": {
                 "w": 1,
@@ -121,38 +145,28 @@ class Robot:
         json_data = json.dumps(data)
         response = requests.put(self.robot_url + "/state/start", data=json_data, headers={'Content-Type': 'application/json'})
     
-        if self.type == "default" and response.status_code != 204:
-            raise Exception(f"Robot is not running as expected. Error: {response.text}")
-                    
-        if self.type == "assistant" and response.status_code != 204:
-             return (f"Robot is not running as expected. Error: {response.text}")
-        
-        return response.text
+        msg, _ = check_response(response, self.mode)
+
+        return msg
     
 
-    def Stop(self):
+    def stop(self):
         response = requests.put(self.robot_url + "/state/stop")
         
-        if self.type == "default" and response.status_code != 204:
-            raise Exception(f"Robot is not running as expected. Error: {response.text}")
-                    
-        if self.type == "assistant" and response.status_code != 204:
-             return (f"Robot is not running as expected. Error: {response.text}")
+        msg, _ = check_response(response, self.mode)
 
-        return "Stopped!"
+        return msg
     
 
-    def GetPose(self):
+    def get_pose(self):
         response = requests.get(self.robot_url + "/eef/pose")
 
-        if self.type == "default" and response.status_code != 200:
-            raise Exception(f"Robot is not running as expected. Error: {response.text}")
-                    
-        if self.type == "assistant" and response.status_code != 200:
-             return (f"Robot is not running as expected. Error: {response.text}")
+        text, err = check_response(response, self.mode)
 
+        if err:
+            return text
 
-        tmp = json.loads(response.text)
+        tmp = json.loads(text)
 
         return Pose(
             Position(
@@ -169,85 +183,64 @@ class Robot:
         )
     
 
-    def PutPose(self, pose, moveType, velocity="none", acceleration="none", safe="none"):
+    def move_to(self, pose, moveType, velocity=None, acceleration=None, safe=None):
         if type(pose) is not Pose:
             raise Exception("Pose must be of type Pose")
 
         full_url = f"{self.robot_url}/eef/pose?moveType={moveType}"
 
-        if velocity != "none":
+        if velocity is not None:
             full_url += f"&velocity={velocity}"
 
-        if acceleration != "none":
+        if acceleration is not None:
             full_url += f"&acceleration={acceleration}"
 
-        if safe != "none":
+        if safe is not None:
             full_url += f"&safe={safe}"
 
         response = requests.put(full_url, json=pose.to_dict(), headers={'Content-Type': 'application/json'})
 
 
-        if self.type == "default" and response.status_code != 204:
-            raise Exception(f"Robot is not running as expected. Error: {response.text}")
-                    
-        if self.type == "assistant" and response.status_code != 204:
-             return (f"Robot is not running as expected. Error: {response.text}")
-        
+        msg, _ = check_response(response, self.mode)
 
-        return "Position set!"
+        return msg
 
 
-    def Home(self):
+    def home(self):
         response = requests.put(self.robot_url + "/home", headers={'accept': '*/*'})
 
-        if self.type == "default" and response.status_code != 204:
-            raise Exception(f"Robot is not running as expected. Error: {response.text}")
-                    
-        if self.type == "assistant" and response.status_code != 204:
-             return (f"Robot is not running as expected. Error: {response.text}")
-             
-        return "Success!"
+        msg, _ = check_response(response, self.mode)
+
+        return msg
 
 
-    def Suck(self):
+    def suck(self):
         response = requests.put(self.robot_url + "/suck", headers={'accept': '*/*'})
 
-        if self.type == "default" and response.status_code != 204:
-            raise Exception(f"Robot is not running as expected. Error: {response.text}")
-                    
-        if self.type == "assistant" and response.status_code != 204:
-             return (f"Robot is not running as expected. Error: {response.text}")
-        
-        return "Sucked!"
+        msg, _ = check_response(response, self.mode)
+
+        return msg
 
 
-    def Release(self):
+    def release(self):
         response = requests.put(self.robot_url + "/release", headers={'accept': '*/*'})
 
-        if self.type == "default" and response.status_code != 204:
-            raise Exception(f"Robot is not running as expected. Error: {response.text}")
-                    
-        if self.type == "assistant" and response.status_code != 204:
-             return (f"Robot is not running as expected. Error: {response.text}")
-        
-        return "Released!"
+        msg, _ = check_response(response, self.mode)
+
+        return msg
    
 
-    def BeltSpeed(self, direction, velocity): 
+    def belt_speed(self, direction, velocity): 
         full_url = f"{self.robot_url}/conveyor/speed?velocity={velocity}&direction={direction}"
 
         response = requests.put(full_url, headers={'accept': '*/*'})
 
-        if self.type == "default" and response.status_code != 204:
-            raise Exception(f"Robot is not running as expected. Error: {response.text}")
-                    
-        if self.type == "assistant" and response.status_code != 204:
-             return (f"Robot is not running as expected. Error: {response.text}")
-        
-        return "Belt speed was succesfully set!"
+        msg, _ = check_response(response, self.mode)
+
+        return msg
 
 
-    def BeltDistance(self, direction, velocity, distance):
+    def belt_distance(self, direction, velocity, distance):
         direction = direction.lower()
         if direction != "forward" and direction != "backwards":
             return ("Direction must be either 'forward' or 'backwards'")
@@ -256,12 +249,8 @@ class Robot:
 
         response = requests.put(full_url, headers={'accept': '*/*'})
 
-        if self.type == "default" and response.status_code != 204:
-            raise Exception(f"Robot is not running as expected. Error: {response.text}")
-                    
-        if self.type == "assistant" and response.status_code != 204:
-             return (f"Robot is not running as expected. Error: {response.text}")
-        
-        return "Belt distance was succesfully set!"
+        msg, _ = check_response(response, self.mode)
+
+        return msg
 
 

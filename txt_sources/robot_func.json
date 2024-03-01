@@ -74,13 +74,16 @@
                             "type": "object",
                             "properties": {
                                 "x": {
-                                    "type": "number"
+                                    "type": "number",
+                                    "description": "x coordinate of movement in meters"
                                 },
                                 "y": {
-                                    "type": "number"
+                                    "type": "number",
+                                    "description": "y coordinate of movement in meters"
                                 },
                                 "z": {
-                                    "type": "number"
+                                    "type": "number",
+                                    "description": "z coordinate of movement in meters"
                                 }
                             }                
                         }
@@ -125,7 +128,7 @@
     },
     {
         "name": "release",
-        "description": "Turns on the vacuum off (release object that arm holding).",
+        "description": "Turns the vacuum off (release object that arm holding).",
         "parameters": {      
             "type": "object",  
             "properties": {

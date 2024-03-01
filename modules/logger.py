@@ -1,5 +1,25 @@
 import datetime
 import json
+import colorama
+from enum import Enum
+
+class Role(Enum):
+    SYSTEM = "system"
+    DEBUG = "function"
+    CODE = "code"
+
+class FancyPrint:
+    code = ""
+    
+    def print(self, message, role: Role):
+        if role == Role.SYSTEM:
+            print(colorama.Fore.CYAN + message + colorama.Style.RESET_ALL)
+        elif role == Role.DEBUG:
+            print(colorama.Fore.YELLOW + message + colorama.Style.RESET_ALL)
+        elif role == Role.CODE:
+            print(colorama.Fore.GREEN + message + colorama.Style.RESET_ALL)
+        else:
+            print(message)
 
 
 class Logger:
@@ -9,7 +29,7 @@ class Logger:
     Max_tokens = 0
 
 
-    def __init__(self, model, messages):
+    def __init__(self, model: str, messages: list):
         self.model = model
 
         current_time = datetime.datetime.now()
@@ -28,7 +48,6 @@ class Logger:
         for message in messages[1:]:
             self.log_message(str(json.dumps(message, indent=4)))
 
-        #self.log_message(str("[\n" + json.dumps({"role": "user", "content": str({prompt})}, indent=4))) 
 
 
     def __del__(self):

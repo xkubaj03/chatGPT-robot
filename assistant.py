@@ -5,11 +5,12 @@ import json
 import time
 import sys
 from modules import functions
-from modules.logger import Logger
+from modules import logger
 
 load_dotenv()
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 openai.api_key = OPENAI_API_KEY
+
 MODEL = os.getenv('MODEL')
 DEBUG = int(os.getenv('DEBUG'))
 URL = os.getenv('ROBOT_URL')
@@ -18,7 +19,7 @@ URL = os.getenv('ROBOT_URL')
 
 MAX_TOKENS = 800
 
-def load_context(filename):
+def load_context(filename: str):
     try:
         with open(filename, 'r', encoding="utf-8") as file:
             data = file.readlines()
@@ -37,16 +38,33 @@ def load_context(filename):
         exit()
 
 
-def send_to_chatGPT(messages, handler, logger, attempts = 0):
+def is_command(message: str, handler: functions.FunctionHandler):
+    message = message.lower()
+
+    if message.strip() == "":
+        return True
+    
+    if message == "exit":
+        exit()
+    
+    if message == "help":
+        print(handler.get_welcome_message() + "\n")
+        return True
+
+
+def send_to_chatGPT(messages: list, handler: functions.FunctionHandler, log: logger.Logger, attempts = 0):
     try:
         response = openai.ChatCompletion.create(
             model= MODEL,
             messages = messages,
-            functions = handler.getAllSpecs(),
+            functions = handler.get_all_specs(),
             max_tokens = MAX_TOKENS,
         )
+    except openai.error.AuthenticationErrorASDS as e:
+        print(f"Nastala chyba při autentizaci: {e}")
+        exit()
 
-    except Exception as e:
+    except (openai.APIError) as e:
         print(f"Nastala chyba při komunikaci s chatGPT: {e}")
         
         if attempts > 2:
@@ -57,7 +75,7 @@ def send_to_chatGPT(messages, handler, logger, attempts = 0):
             print("Zkusím to znovu...")
             time.sleep((attempts+1)*5)
 
-        return send_to_chatGPT(messages, handler, logger, attempts+1)
+        return send_to_chatGPT(messages, handler, log, attempts+1)
 
 
     token_usage = response['usage']['completion_tokens']
@@ -72,7 +90,7 @@ def send_to_chatGPT(messages, handler, logger, attempts = 0):
 
     message = response.choices[0]['message']['content']
     messages.append(response.choices[0]['message'])
-    logger.log_message(str(json.dumps(response.choices[0]['message'], indent=4)), total_tokens)
+    log.log_message(str(json.dumps(response.choices[0]['message'], indent=4)), total_tokens)
 
     if "function_call" in response.choices[0]['message']:
         if message is not None:
@@ -83,16 +101,16 @@ def send_to_chatGPT(messages, handler, logger, attempts = 0):
         try:
             arguments = json.loads(response.choices[0]['message']['function_call']['arguments'])
 
-            response = handler.HandleFunction(function_name, arguments)
+            response = handler.handle_function(function_name, arguments)
         except json.JSONDecodeError:
             if (DEBUG > 3):
                 print("Invalid JSON!")  
                 print(response.choices[0]['message']['function_call']['arguments'])
 
         messages.append({"role": "function", "name": function_name, "content": response})        
-        logger.log_message(str(json.dumps({"role": "function", "name": function_name, "content": response}, indent=4)), total_tokens)
+        log.log_message(str(json.dumps({"role": "function", "name": function_name, "content": response}, indent=4)), total_tokens)
         
-        resp = send_to_chatGPT(messages, handler, logger)
+        resp = send_to_chatGPT(messages, handler, log)
 
         return resp
         
@@ -104,15 +122,15 @@ def main():
     handler = functions.FunctionHandler(DEBUG, URL)
 
     messages=[
-        {"role": "system", "content": str({handler.getPrompt_message()})},
+        {"role": "system", "content": str({handler.get_prompt_message()})},
     ]
     
     if len(sys.argv) > 1:
         messages = load_context(sys.argv[1])
     
-    logger = Logger(MODEL, messages)    
+    log = logger.Logger(MODEL, messages)    
 
-    resp = send_to_chatGPT(messages, handler, logger)
+    resp = send_to_chatGPT(messages, handler, log)
 
     if (DEBUG > 3) or len(messages) > 2:
         print(resp+"\n")
@@ -126,18 +144,14 @@ def main():
 
     # loop until user types "exit"
     while user_input != "exit": #TODO: EXIT COMMAND?
-        if user_input == "help":
-            print(handler.get_welcome_message() + "\n")
-            user_input = ""
-
-        if user_input == "":
+        if is_command(user_input, handler):
             user_input = input("Zadejte vstup: ")
             continue
         
         messages.append({"role": "user", "content": user_input})
-        logger.log_message(str(json.dumps({"role": "user", "content": user_input}, indent=4)))
+        log.log_message(str(json.dumps({"role": "user", "content": user_input}, indent=4)))
 
-        resp = send_to_chatGPT(messages, handler, logger)
+        resp = send_to_chatGPT(messages, handler, log)
 
         print("\n"+resp+"\n")
         user_input = input("Zadejte vstup: ")

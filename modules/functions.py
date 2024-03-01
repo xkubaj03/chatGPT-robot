@@ -4,137 +4,115 @@ from datetime import datetime
 import subprocess
 import modules.robot as r
 
+def load_file(file_path):
+    try:
+        with open(file_path, 'r', encoding="utf-8") as file:
+            return file.read()
+            
+    except Exception as e:
+        return (f"Error occured: {e}")
+
 
 class FunctionHandler:
-    prompt_message = ""
-    welcome_message = ""
-    function_specs = []
+    functions: dict
     robot: r.Robot
-
-    defaultValues = {
-            "moveType": "JUMP", # JUMP, LINEAR, JOINTS
-            "velocity": 100,
-            "acceleration": 100,
-            "safe": True,
-            "orientation": {
-                "w": 0,
-                "x": 1,
-                "y": 0,
-                "z": 0
-            },
-            "platform_A": {
-                "position": {
-                    "x": 0.014,
-                    "y": -0.293,
-                    "z": -0.104
-                },
-                "orientation": {
-                    "w": 0,
-                    "x": -0.691,
-                    "y": 0.723,
-                    "z": 0
-                }
-            },
-            "platform_B": {
-                "position": {
-                    "x": 0.0903,
-                    "y": -0.281,
-                    "z": -0.1038
-                },
-                "orientation": {
-                    "w": 0,
-                    "x": -0.59,
-                    "y": 0.807,
-                    "z": 0
-                }
-            },
-            "beltPosition": {
-                "position": {
-                    "x": 0.325,
-                    "y": -0.021,
-                    "z": -0.047
-                },
-                "orientation": {
-                    "w": 0,
-                    "x": -0.59,
-                    "y": 0.807,
-                    "z": 0
-                }
-            },
-        }
-
+    robot_running = False
 
     def __init__(self, debug, url):
         self.debug = debug
         self.url = url
 
         #set up robot
-        function_specs = False
-
         try:
             self.robot = r.Robot(url, "assistant")
-            function_specs = True
+            self.robot_running = True #This makes the robot functions available
 
-        except Exception as e:
+        except Exception as e:  
             print(f"Failed to connect to the Robot: {e} \nAssistent is unable to control the robot!")
 
-        #set up function specs
-        with open('./txt_sources/functions.txt', 'r', encoding='utf-8') as file:
-            json_data = file.read()
+        self.functions = {
+            "started": self.started,        
+            "start": self.start,
+            "stop": self.stop,     
+            "getPose": self.get_pose,
+            "putPose": self.put_pose,
+            "putHome": self.put_home,
+            "suck": self.suck,
+            "release": self.release,
+            "beltSpeed": self.belt_speed,
+            "beltDistance": self.belt_distance,
+            "runSavedProgram": self.run_program,
+            "saveTXT": self.save_txt,      
+            "getSavedPrograms": self.get_saved_programs,
+            "getSavedProgram": self.get_program,
+        }
+        
 
-        self.function_specs = json.loads(json_data)
+    def get_all_specs(self):
+        """
+        returns function specs and robot function specs (if robot is awailable)
+        """
 
-        if function_specs:
-            with open('./txt_sources/robot_func.txt', 'r', encoding='utf-8') as file:
-                json_data = file.read()
+        json_data = load_file('./txt_sources/functions.json')
+        function_specs = json.loads(json_data)
+        
+        if self.robot_running:
+            json_data = load_file('./txt_sources/robot_func.json')
          
-            self.function_specs.extend(json.loads(json_data))
+            function_specs.extend(json.loads(json_data))
 
-        
-        with open('./txt_sources/prompt.txt', 'r', encoding='utf-8') as file:
-            self.prompt_message = file.read()
-
-        
-        with open('./txt_sources/intro.txt', 'r', encoding='utf-8') as file:
-            self.welcome_message = file.read()
- 
-
-    def getAllSpecs(self):
-        return self.function_specs
+        return function_specs
 
     
-    def getPrompt_message(self):
-        return self.prompt_message
+    def get_prompt_message(self):
+        """
+        returns initial prompt message filled with sample code
+        """
     
+        prompt = load_file('./txt_sources/prompt.txt')
+        sample = load_file('./txt_sources/sample.py')
+
+        # Insert sample code into prompt on ###CODE### position
+        prompt = prompt.replace("###CODE###", sample)
+
+        return prompt
+
+
     def get_welcome_message(self):
-        return self.welcome_message
-    
-    def HandleFunction(self, function_name, parameters):
+        return load_file('./txt_sources/intro.txt')
+
+
+    def handle_function(self, function_name, parameters):
+        """
+        Calls function with given name and parameters (or raises exception if function is not found)
+        """
+
         if(self.debug > 0):
             print("!!!" + function_name + " called!!! poggers :O ")
 
         if function_name not in self.functions:
-            raise Exception(f"Function {function_name} not found!")
+            raise KeyError(f"Function {function_name} not found!")
         
-        return self.functions[function_name](self, parameters)
+        return self.functions[function_name](parameters)
+
 
     def started(self, parameter):
-        return str(self.robot.Started())
+        return str(self.robot.started())
 
 
     def start(self, parameters):
-        return self.robot.Start()
+        return self.robot.start()
 
 
     def stop(self, parameters):
-        return self.robot.Stop()
+        return self.robot.stop()
 
 
-    def getPose(self, parameters):
-        return str(self.robot.GetPose())
+    def get_pose(self, parameters):
+        return str(self.robot.get_pose())
 
 
-    def putPose(self, parameters):
+    def put_pose(self, parameters):
         if "moveType" not in parameters:
             return "Missing required parameter (moveType)"
         
@@ -161,38 +139,38 @@ class FunctionHandler:
         )        
 
 
-        return self.robot.PutPose(
+        return self.robot.move_to(
             pose, 
             parameters["moveType"], 
-            parameters.get("velocity", "none"), 
-            parameters.get("acceleration", "none"), 
-            parameters.get("safe", "none")
+            parameters.get("velocity", None), 
+            parameters.get("acceleration", None), 
+            parameters.get("safe", None)
         )
 
 
-    def putHome(self, parameters):
-        return self.robot.Home()
+    def put_home(self, parameters):
+        return self.robot.home()
 
 
     def suck(self, parameters):
-        return self.robot.Suck()
+        return self.robot.suck()
 
 
     def release(self, parameters):
-        return self.robot.Release()
+        return self.robot.release()
 
 
-    def beltSpeed(self, parameters):
+    def belt_speed(self, parameters):
         if "direction" not in parameters:
             return "Missing required parameter (direction)"
         
         if "velocity" not in parameters:
             return "Missing required parameter (velocity)"
         
-        return self.robot.BeltSpeed(parameters["direction"], parameters["velocity"])
+        return self.robot.belt_speed(parameters["direction"], parameters["velocity"])
 
 
-    def beltDistance(self, parameters):
+    def belt_distance(self, parameters):
         if "direction" not in parameters:
             return "Missing required parameter (direction)"
         
@@ -202,9 +180,10 @@ class FunctionHandler:
         if "distance" not in parameters:
             return "Missing required parameter (distance)"
         
-        return self.robot.BeltDistance(parameters["direction"], parameters["velocity"], parameters["distance"])
+        return self.robot.belt_distance(parameters["direction"], parameters["velocity"], parameters["distance"])
 
-    def saveTXT(self, parameters):
+
+    def save_txt(self, parameters):
         if "file_path" not in parameters:
             return "Missing required parameter (file_path)"
         
@@ -229,7 +208,7 @@ class FunctionHandler:
             return (f"Error occured: {e}")
 
 
-    def getSavedPrograms(self, parameters):
+    def get_saved_programs(self, parameters):
         ret = ""
         folder = "./src"
 
@@ -245,7 +224,7 @@ class FunctionHandler:
         return ret
     
 
-    def getSavedProgram(self, parameters):
+    def get_program(self, parameters):
         if "file_path" not in parameters:
             return "Missing required parameter (file_path)"
         
@@ -254,15 +233,10 @@ class FunctionHandler:
         if "./src/" not in file_path:
             file_path = "./src/" + file_path
 
-        try:
-            with open(file_path, 'r', encoding="utf-8") as file:
-                return file.read()
-            
-        except Exception as e:
-            return (f"Error occured: {e}")
+        return load_file(file_path)
 
 
-    def runSavedProgram(self, parameters):
+    def run_program(self, parameters):
         if "file_path" not in parameters:
             return "Missing required parameter (file_path)"
         
@@ -286,20 +260,4 @@ class FunctionHandler:
             return f"Error occurred: {e}"
 
  
-    functions = {
-        "started": started,        
-        "start": start,
-        "stop": stop,     
-        "getPose": getPose,
-        "putPose": putPose,
-        "putHome": putHome,
-        "suck": suck,
-        "release": release,
-        "beltSpeed": beltSpeed,
-        "beltDistance": beltDistance,
-        "runSavedProgram": runSavedProgram,
-        "saveTXT": saveTXT,      
-        "getSavedPrograms": getSavedPrograms,
-        "getSavedProgram": getSavedProgram,
-    }
-
+    
