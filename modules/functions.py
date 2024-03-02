@@ -2,6 +2,8 @@ import json
 import os
 from datetime import datetime
 import subprocess
+import importlib
+import inspect
 import modules.robot as r
 import modules.logger as l
 
@@ -49,7 +51,7 @@ class FunctionHandler:
         }
         
 
-    def get_all_specs(self):
+    def get_all_specs(self) -> list:
         """
         returns function specs and robot function specs (if robot is awailable)
         """
@@ -64,26 +66,49 @@ class FunctionHandler:
 
         return function_specs
 
-    
-    def get_prompt_message(self):
+
+    def load_module_info(module_name) -> str:
+        """
+        Loads module info and returns it as a string
+        """
+        info = ""
+        module = importlib.import_module(module_name)
+        # Exclude classes that are unnecessary
+        exclude_classes = {"Enum", "Mode"}
+
+
+        for name, obj in inspect.getmembers(module): 
+            if inspect.isclass(obj) and name not in exclude_classes:
+                info += (f"Class: {name}, Docstring: {obj.__doc__}")
+
+                for method_name, method in inspect.getmembers(obj, inspect.isfunction):
+                    info += (f"  Method: {method_name}, Docstring: {method.__doc__}")
+
+        return info
+                    
+
+    def get_prompt_message(self) -> str:
         """
         returns initial prompt message filled with sample code
         """
     
         prompt = load_file('./txt_sources/prompt.txt')
         sample = load_file('./txt_sources/sample.py')
+        module_info = FunctionHandler.load_module_info('modules.robot')
 
+        # Insert module info into prompt on ###MODULE### position
+        prompt = prompt.replace("###MODULE###", module_info)
         # Insert sample code into prompt on ###CODE### position
         prompt = prompt.replace("###CODE###", sample)
 
         return prompt
 
 
-    def get_welcome_message(self):
+    def get_welcome_message(self) -> str:
         return load_file('./txt_sources/intro.txt')
 
 
-    def handle_function(self, function_name, parameters):
+    def handle_function(self, function_name, parameters) -> str:
         """
         Calls function with given name and parameters (or raises exception if function is not found)
         """
@@ -97,23 +122,23 @@ class FunctionHandler:
         return self.functions[function_name](parameters)
 
 
-    def started(self, parameter):
+    def started(self, parameter) -> str:
         return str(self.robot.started())
 
 
-    def start(self, parameters):
+    def start(self, parameters) -> str:
         return self.robot.start()
 
 
-    def stop(self, parameters):
+    def stop(self, parameters) -> str:
         return self.robot.stop()
 
 
-    def get_pose(self, parameters):
+    def get_pose(self, parameters) -> str:
         return str(self.robot.get_pose())
 
 
-    def put_pose(self, parameters):
+    def put_pose(self, parameters) -> str:
         if "moveType" not in parameters:
             return "Missing required parameter (moveType)"
         
@@ -149,19 +174,19 @@ class FunctionHandler:
         )
 
 
-    def put_home(self, parameters):
+    def put_home(self, parameters) -> str:
         return self.robot.home()
 
 
-    def suck(self, parameters):
+    def suck(self, parameters) -> str:
         return self.robot.suck()
 
 
-    def release(self, parameters):
+    def release(self, parameters) -> str:
         return self.robot.release()
 
 
-    def belt_speed(self, parameters):
+    def belt_speed(self, parameters) -> str:
         if "direction" not in parameters:
             return "Missing required parameter (direction)"
         
@@ -171,7 +196,7 @@ class FunctionHandler:
         return self.robot.belt_speed(parameters["direction"], parameters["velocity"])
 
 
-    def belt_distance(self, parameters):
+    def belt_distance(self, parameters) -> str:
         if "direction" not in parameters:
             return "Missing required parameter (direction)"
         
@@ -184,7 +209,7 @@ class FunctionHandler:
         return self.robot.belt_distance(parameters["direction"], parameters["velocity"], parameters["distance"])
 
 
-    def save_txt(self, parameters):
+    def save_txt(self, parameters) -> str:
         if "file_path" not in parameters:
             return "Missing required parameter (file_path)"
         
@@ -209,7 +234,7 @@ class FunctionHandler:
             return (f"Error occured: {e}")
 
 
-    def get_saved_programs(self, parameters):
+    def get_saved_programs(self, parameters) -> str:
         ret = ""
         folder = "./src"
 
@@ -225,7 +250,7 @@ class FunctionHandler:
         return ret
     
 
-    def get_program(self, parameters):
+    def get_program(self, parameters) -> str:
         if "file_path" not in parameters:
             return "Missing required parameter (file_path)"
         
@@ -237,7 +262,7 @@ class FunctionHandler:
         return load_file(file_path)
 
 
-    def run_program(self, parameters):
+    def run_program(self, parameters) -> str:
         if "file_path" not in parameters:
             return "Missing required parameter (file_path)"
         

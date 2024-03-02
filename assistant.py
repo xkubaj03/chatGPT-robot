@@ -53,8 +53,6 @@ def is_command(message: str, handler: functions.FunctionHandler):
 
 
 def send_to_chatGPT(messages: list, handler: functions.FunctionHandler, log: logger.Logger, attempts = 0):
-    attempts += 1
-
     try:
         response = openai.ChatCompletion.create(
             model= MODEL,
@@ -62,11 +60,12 @@ def send_to_chatGPT(messages: list, handler: functions.FunctionHandler, log: log
             functions = handler.get_all_specs(),
             max_tokens = MAX_TOKENS,
         )
-    except openai.error.AuthenticationErrorASDS as e:
-        logger.FancyPrint(logger.Role.SYSTEM, f"Nastala chyba při autentizaci: {e}")
+    except openai.error.AuthenticationError as e:
+        logger.FancyPrint(logger.Role.SYSTEM, f"Nastala chyba při autentizaci. Zkontrolujte svůj API key. \nChyba: {e}")
         exit()
 
-    except (openai.APIError) as e:
+    except (openai.APIError, openai.error.RateLimitError) as e:
+        attempts += 1
         logger.FancyPrint(logger.Role.SYSTEM, f"Nastala chyba při komunikaci s chatGPT: {e}")
         
         if attempts > 2:
@@ -78,6 +77,19 @@ def send_to_chatGPT(messages: list, handler: functions.FunctionHandler, log: log
             time.sleep((attempts)*5)
 
         return send_to_chatGPT(messages, handler, log, attempts)
+
+    except openai.error.InvalidRequestError as e:
+        # Handle invalid requests, such as exceeding token limits
+        if (DEBUG > 0):
+            logger.FancyPrint(logger.Role.DEBUG, f"Byl překročen limit tokenů: {e}")
+
+        # Remove part of the context and try again 
+        # We need to keep the first message, which is the prompt
+        # Also we need to remove bulk of messages because of RateLimitError
+        del messages[1:8]
+
+        return send_to_chatGPT(messages, handler, log)
+        
 
 
     token_usage = response['usage']['completion_tokens']

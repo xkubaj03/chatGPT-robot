@@ -149,7 +149,7 @@
                 },
                 "velocity": {
                     "type": "number",
-                    "description": "Velocity of movement in percentage"
+                    "description": "Velocity of movement 1-50"
                 }
             },
             "requiredParams": ["direction", "velocity"]
@@ -163,12 +163,12 @@
             "properties": {
                 "direction": {
                     "type": "string",
-                    "enum": ["forward", "backward"],
+                    "enum": ["forward", "backwards"],
                     "description": "Type of movement"
                 },
                 "velocity": {
                     "type": "number",
-                    "description": "Velocity of movement in percentage"
+                    "description": "Velocity of movement 1-50"
                 },
                 "distance": {
                     "type": "number",

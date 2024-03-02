@@ -27,8 +27,8 @@ class CodeHighlight:
 
         different_lines_count = sum(1 for line in code_differences if line.startswith('+') or line.startswith('-'))
 
-        # If there are more than 70% of lines different, print the whole code again
-        if different_lines_count / len(cls.code) > 0.7:
+        # If there are more than 80% of lines different, print the whole code again
+        if different_lines_count / len(cls.code) > 0.8:
             cls.code = new_code
             FancyPrint(Role.CODE,  "\n".join(new_code)) # Connect rows
             return
@@ -59,7 +59,11 @@ class CodeHighlight:
 
         # If the first separator is not found
         if len(first_split) == 1:
-            return [message]
+            #try again
+            first_split = message.split("```", 1)
+            if len(first_split) == 1:
+                # First separator not found
+                return [message]
         
         first_part, rest_of_message = first_split
         # Finds second separator

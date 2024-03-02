@@ -9,7 +9,13 @@ URL = os.getenv('ROBOT_URL')
 
 
 class Pose:
+    """
+    Struct to store position and orientation of the robot
+    """
     def __init__(self, position, orientation):
+        """
+        Initializes the Pose object with position and orientation
+        """
         if not isinstance(position, Position):
             raise ValueError("1st parameter position must be of type Position")
         
@@ -21,22 +27,37 @@ class Pose:
         
 
     def to_dict(self):
+        """
+        Returns the Pose object as a dictionary
+        """
         return {
             "position": self.position.to_dict(),
             "orientation": self.orientation.to_dict()
         }
     
     def __str__(self):
+        """
+        Returns the Pose object as a JSON string
+        """
         return json.dumps(self.to_dict(), indent=4)
 
 
 class Position:
+    """
+    Struct to store the position of the robot (values in meters)
+    """
     def __init__(self, x, y, z):
+        """
+        Initializes the Position object with x, y and z
+        """
         self.x = float(x)
         self.y = float(y)
         self.z = float(z)
     
     def to_dict(self):
+        """
+        Returns the Position object as a dictionary
+        """
         return {
             "x": self.x,
             "y": self.y,
@@ -44,11 +65,20 @@ class Position:
         }
     
     def __str__(self):
+        """
+        Returns the Position object as a JSON string
+        """
         return json.dumps(self.to_dict(), indent=4)
 
 
 class Orientation:
+    """
+    Struct to store the orientation of the robot (values in quaternions)
+    """
     def __init__(self, w, x, y, z):
+        """
+        Initializes the Orientation object with w, x, y and z
+        """
         self.w = float(w)
         self.x = float(x)
         self.y = float(y)
@@ -56,6 +86,9 @@ class Orientation:
 
 
     def to_dict(self):
+        """
+        Returns the Orientation object as a dictionary
+        """
         return {
             "w": self.w,
             "x": self.x,
@@ -64,6 +97,9 @@ class Orientation:
         }
     
     def __str__(self):
+        """
+        Returns the Orientation object as a JSON string
+        """
         return json.dumps(self.to_dict(), indent=4)
 
 
@@ -95,10 +131,16 @@ def check_response(response, mode):
     
 
 class Robot:
+    """
+    Class to control the robot
+    """
     robot_url = ""
     mode: Mode = Mode.DEFAULT
 
     def __init__(self, url = URL, mode = Mode.DEFAULT): 
+        """
+        Initializes the Robot object and establishes connection to the robot
+        """
         self.robot_url = url
         self.mode = mode
 
@@ -114,6 +156,10 @@ class Robot:
             
 
     def started(self):
+        """
+        Parameters: self
+        Returns True if the robot is started, False if not
+        """
         response = requests.get(self.robot_url + "/state/started")
 
         msg, err = check_response(response, self.mode)
@@ -128,6 +174,10 @@ class Robot:
     
 
     def start(self):
+        """
+        Parameters: self
+        Starts the robot
+        """
         data = {
             "orientation": {
                 "w": 1,
@@ -151,6 +201,10 @@ class Robot:
     
 
     def stop(self):
+        """
+        Parameters: self
+        Stops the robot
+        """
         response = requests.put(self.robot_url + "/state/stop")
         
         msg, _ = check_response(response, self.mode)
@@ -159,6 +213,10 @@ class Robot:
     
 
     def get_pose(self):
+        """
+        Parameters: self
+        returns class Pose(Position(x,y,z), Orientation(w,x,y,z))
+        """
         response = requests.get(self.robot_url + "/eef/pose")
 
         text, err = check_response(response, self.mode)
@@ -183,7 +241,11 @@ class Robot:
         )
     
 
-    def move_to(self, pose, moveType, velocity=None, acceleration=None, safe=None):
+    def move_to(self, pose: Pose, moveType, velocity=None, acceleration=None, safe=None):
+        """
+        Parameters: self, pose (Pose), moveType (str JUMP/LINEAR/JOINS), velocity (int 1-100), acceleration (int 1-100 ), safe (bool)
+        Moves the robot to the given pose with the given moveType, velocity, acceleration and safe
+        """
         if type(pose) is not Pose:
             raise Exception("Pose must be of type Pose")
 
@@ -207,6 +269,10 @@ class Robot:
 
 
     def home(self):
+        """
+        parameters: self
+        Calibrates the robot and moves to home position
+        """
         response = requests.put(self.robot_url + "/home", headers={'accept': '*/*'})
 
         msg, _ = check_response(response, self.mode)
@@ -215,6 +281,10 @@ class Robot:
 
 
     def suck(self):
+        """
+        parameters: self
+        Turns on the vacuum. (Holds an object)
+        """
         response = requests.put(self.robot_url + "/suck", headers={'accept': '*/*'})
 
         msg, _ = check_response(response, self.mode)
@@ -223,6 +293,10 @@ class Robot:
 
 
     def release(self):
+        """
+        parameters: self
+        Turns off the vacuum. (Releases an object)
+        """
         response = requests.put(self.robot_url + "/release", headers={'accept': '*/*'})
 
         msg, _ = check_response(response, self.mode)
@@ -231,6 +305,10 @@ class Robot:
    
 
     def belt_speed(self, direction, velocity): 
+        """
+        parameters: self, direction (forward, backwards), velocity(int 1 - 50)
+        Starts the conveyor belt with the given velocity and direction
+        """
         full_url = f"{self.robot_url}/conveyor/speed?velocity={velocity}&direction={direction}"
 
         response = requests.put(full_url, headers={'accept': '*/*'})
@@ -241,6 +319,10 @@ class Robot:
 
 
     def belt_distance(self, direction, velocity, distance):
+        """
+        Parameters: self, direction (forward, backwards), velocity(int 1 - 50), distance (float in meters)
+        Moves the conveyor belt with the given velocity, direction and distance
+        """
         direction = direction.lower()
         if direction != "forward" and direction != "backwards":
             return ("Direction must be either 'forward' or 'backwards'")
