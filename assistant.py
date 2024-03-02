@@ -30,11 +30,11 @@ def load_context(filename: str):
             return messages
     
     except FileNotFoundError:
-        print(f"Soubor {filename} nebyl nalezen.")
+        logger.FancyPrint(logger.Role.SYSTEM, f"Soubor {filename} nebyl nalezen.")
         exit()
 
     except json.JSONDecodeError as e:
-        print(f"Obsah souboru {filename} není platný JSON. Error message: {e}")
+        logger.FancyPrint(logger.Role.SYSTEM, f"Obsah souboru {filename} není platný JSON. Error message: {e}")
         exit()
 
 
@@ -48,11 +48,13 @@ def is_command(message: str, handler: functions.FunctionHandler):
         exit()
     
     if message == "help":
-        print(handler.get_welcome_message() + "\n")
+        logger.FancyPrint(logger.Role.GPT, handler.get_help_message())
         return True
 
 
 def send_to_chatGPT(messages: list, handler: functions.FunctionHandler, log: logger.Logger, attempts = 0):
+    attempts += 1
+
     try:
         response = openai.ChatCompletion.create(
             model= MODEL,
@@ -61,31 +63,31 @@ def send_to_chatGPT(messages: list, handler: functions.FunctionHandler, log: log
             max_tokens = MAX_TOKENS,
         )
     except openai.error.AuthenticationErrorASDS as e:
-        print(f"Nastala chyba při autentizaci: {e}")
+        logger.FancyPrint(logger.Role.SYSTEM, f"Nastala chyba při autentizaci: {e}")
         exit()
 
     except (openai.APIError) as e:
-        print(f"Nastala chyba při komunikaci s chatGPT: {e}")
+        logger.FancyPrint(logger.Role.SYSTEM, f"Nastala chyba při komunikaci s chatGPT: {e}")
         
         if attempts > 2:
-            print("Příliš mnoho pokusů o komunikaci s chatGPT. Program se ukončí.")
+            logger.FancyPrint(logger.Role.SYSTEM, "Příliš mnoho pokusů o komunikaci s chatGPT. Program se ukončí.")
             exit()
 
         else:
-            print("Zkusím to znovu...")
-            time.sleep((attempts+1)*5)
+            logger.FancyPrint(logger.Role.SYSTEM, "Zkusím to znovu...")
+            time.sleep((attempts)*5)
 
-        return send_to_chatGPT(messages, handler, log, attempts+1)
+        return send_to_chatGPT(messages, handler, log, attempts)
 
 
     token_usage = response['usage']['completion_tokens']
     total_tokens = response['usage']['total_tokens']
 
     if (DEBUG > 8):
-        print(f"Token usage: {token_usage}")
+        logger.FancyPrint(logger.Role.DEBUG, f"Token usage: {token_usage}")
 
         if token_usage >= MAX_TOKENS:
-            print("!!! WARNING !!!!  Max tokens exceeded!")
+            logger.FancyPrint(logger.Role.DEBUG, "!!! WARNING !!!!  Max tokens exceeded!")
 
 
     message = response.choices[0]['message']['content']
@@ -94,7 +96,7 @@ def send_to_chatGPT(messages: list, handler: functions.FunctionHandler, log: log
 
     if "function_call" in response.choices[0]['message']:
         if message is not None:
-            print("\n"+ message +"\n")
+            logger.FancyPrint(logger.Role.GPT, message)
 
         function_name = response.choices[0]['message']['function_call']['name']
 
@@ -104,8 +106,7 @@ def send_to_chatGPT(messages: list, handler: functions.FunctionHandler, log: log
             response = handler.handle_function(function_name, arguments)
         except json.JSONDecodeError:
             if (DEBUG > 3):
-                print("Invalid JSON!")  
-                print(response.choices[0]['message']['function_call']['arguments'])
+                logger.FancyPrint(logger.Role.DEBUG, "Invalid JSON!\n Arguments: " + response.choices[0]['message']['function_call']['arguments'])
 
         messages.append({"role": "function", "name": function_name, "content": response})        
         log.log_message(str(json.dumps({"role": "function", "name": function_name, "content": response}, indent=4)), total_tokens)
@@ -132,13 +133,14 @@ def main():
 
     resp = send_to_chatGPT(messages, handler, log)
 
-    if (DEBUG > 3) or len(messages) > 2:
-        print(resp+"\n")
-        
+    if len(messages) > 2:
+        logger.FancyPrint(logger.Role.GPT, resp)    
 
-    # print welcome message IF messages are empty
+    elif (DEBUG > 3):
+        logger.FancyPrint(logger.Role.DEBUG, resp)
+
     if len(messages) <= 2:
-        print(handler.get_welcome_message() + "\n") #TODO: INTRO MESSAGE
+        logger.FancyPrint(logger.Role.GPT, handler.get_welcome_message())
 
     user_input = input("Zadejte vstup: ")
 
@@ -153,7 +155,7 @@ def main():
 
         resp = send_to_chatGPT(messages, handler, log)
 
-        print("\n"+resp+"\n")
+        logger.FancyPrint(logger.Role.GPT, resp)
         user_input = input("Zadejte vstup: ")
 
     

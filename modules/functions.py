@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 import subprocess
 import modules.robot as r
+import modules.logger as l
 
 def load_file(file_path):
     try:
@@ -28,7 +29,7 @@ class FunctionHandler:
             self.robot_running = True #This makes the robot functions available
 
         except Exception as e:  
-            print(f"Failed to connect to the Robot: {e} \nAssistent is unable to control the robot!")
+            l.FancyPrint(l.Role.SYSTEM, f"Failed to connect to the Robot: {e} \nAssistent is unable to control the robot!")
 
         self.functions = {
             "started": self.started,        
@@ -88,7 +89,7 @@ class FunctionHandler:
         """
 
         if(self.debug > 0):
-            print("!!!" + function_name + " called!!! poggers :O ")
+            l.FancyPrint(l.Role.DEBUG, "!!!" + function_name + " called!!! poggers :O ")
 
         if function_name not in self.functions:
             raise KeyError(f"Function {function_name} not found!")
