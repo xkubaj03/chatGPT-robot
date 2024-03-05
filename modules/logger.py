@@ -89,6 +89,10 @@ class Role(Enum):
 def FancyPrint(role: Role, message: str) -> None:
     """
     Method for printing messages with color coding (or later for logging or sound module)
+
+    Args:
+        role (Role): Role of the message
+        message (str): Message to be printed
     """
     if role == Role.SYSTEM:
         print(colorama.Fore.LIGHTRED_EX + message + colorama.Style.RESET_ALL)
@@ -119,8 +123,8 @@ def FancyPrint(role: Role, message: str) -> None:
         colorama.Style.RESET_ALL
         print(message)
 
+
 class Logger:
-    log = ""
     model = ""
     log_filename = ""
     Max_tokens = 0
@@ -168,6 +172,4 @@ class Logger:
 
         except Exception as e:
             FancyPrint(Role.SYSTEM, f"Error logging message: {e}")
-
-
 

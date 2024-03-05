@@ -19,7 +19,20 @@ URL = os.getenv('ROBOT_URL')
 
 MAX_TOKENS = 800
 
-def load_context(filename: str):
+def load_context(filename: str) -> list[dict]:
+    """
+    Load context from file (remove last line and returns json list).
+
+    Args:
+        filename (str): Path to the file with context
+
+    Returns:
+        list: List of json messages
+
+    Raises:
+        FileNotFoundError: If the file is not found.
+        JSONDecodeError: If the file content is not valid JSON.
+    """
     try:
         with open(filename, 'r', encoding="utf-8") as file:
             data = file.readlines()
@@ -38,7 +51,17 @@ def load_context(filename: str):
         exit()
 
 
-def is_command(message: str, handler: functions.FunctionHandler):
+def is_command(message: str, handler: functions.FunctionHandler) -> bool:
+    """
+    Check for commands and execute them if found
+
+    Args:
+        message (str): User input
+        handler (functions.FunctionHandler): Function handler to execute commands
+    
+    Returns:
+        bool: True if the message is a command or empty input, False otherwise
+    """
     message = message.lower()
 
     if message.strip() == "":
@@ -48,11 +71,13 @@ def is_command(message: str, handler: functions.FunctionHandler):
         exit()
     
     if message == "help":
-        logger.FancyPrint(logger.Role.GPT, handler.get_help_message())
+        logger.FancyPrint(logger.Role.GPT, handler.get_welcome_message())
         return True
+    
+    return False
 
 
-def send_to_chatGPT(messages: list, handler: functions.FunctionHandler, log: logger.Logger, attempts = 0):
+def send_to_chatGPT(messages: list[dict], handler: functions.FunctionHandler, log: logger.Logger, attempts: int = 0) -> str:
     try:
         response = openai.ChatCompletion.create(
             model= MODEL,
@@ -68,7 +93,7 @@ def send_to_chatGPT(messages: list, handler: functions.FunctionHandler, log: log
         attempts += 1
         logger.FancyPrint(logger.Role.SYSTEM, f"Nastala chyba při komunikaci s chatGPT: {e}")
         
-        if attempts > 2:
+        if attempts > 3:
             logger.FancyPrint(logger.Role.SYSTEM, "Příliš mnoho pokusů o komunikaci s chatGPT. Program se ukončí.")
             exit()
 

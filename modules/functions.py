@@ -17,11 +17,12 @@ def load_file(file_path):
 
 
 class FunctionHandler:
-    functions: dict
-    robot: r.Robot
-    robot_running = False
+    """
+    Handles incoming function calls and calls the appropriate function.
+    Also provides some other utility functions.
+    """
 
-    def __init__(self, debug, url):
+    def __init__(self, debug: int, url: str):
         self.debug = debug
         self.url = url
 
@@ -67,7 +68,7 @@ class FunctionHandler:
         return function_specs
 
 
-    def load_module_info(module_name) -> str:
+    def load_module_info(module_name: str) -> str:
         """
         Loads module info and returns it as a string
         """
@@ -105,12 +106,25 @@ class FunctionHandler:
 
 
     def get_welcome_message(self) -> str:
+        """
+        returns welcome message
+        """
         return load_file('./txt_sources/intro.txt')
 
 
-    def handle_function(self, function_name, parameters) -> str:
+    def handle_function(self, function_name: str, parameters: dict) -> str:
         """
         Calls function with given name and parameters (or raises exception if function is not found)
+
+        Args:
+            function_name (str): name of the function
+            parameters (dict): parameters for the function
+
+        Returns:
+            str: result of the function
+
+        Raises:
+            KeyError: If the function is not found
         """
 
         if(self.debug > 0):
@@ -122,23 +136,23 @@ class FunctionHandler:
         return self.functions[function_name](parameters)
 
 
-    def started(self, parameter) -> str:
+    def started(self, parameter: dict) -> str:
         return str(self.robot.started())
 
 
-    def start(self, parameters) -> str:
+    def start(self, parameters: dict) -> str:
         return self.robot.start()
 
 
-    def stop(self, parameters) -> str:
+    def stop(self, parameters: dict) -> str:
         return self.robot.stop()
 
 
-    def get_pose(self, parameters) -> str:
+    def get_pose(self, parameters: dict) -> str:
         return str(self.robot.get_pose())
 
 
-    def put_pose(self, parameters) -> str:
+    def put_pose(self, parameters: dict) -> str:
         if "moveType" not in parameters:
             return "Missing required parameter (moveType)"
         
@@ -174,19 +188,19 @@ class FunctionHandler:
         )
 
 
-    def put_home(self, parameters) -> str:
+    def put_home(self, parameters: dict) -> str:
         return self.robot.home()
 
 
-    def suck(self, parameters) -> str:
+    def suck(self, parameters: dict) -> str:
         return self.robot.suck()
 
 
-    def release(self, parameters) -> str:
+    def release(self, parameters: dict) -> str:
         return self.robot.release()
 
 
-    def belt_speed(self, parameters) -> str:
+    def belt_speed(self, parameters: dict) -> str:
         if "direction" not in parameters:
             return "Missing required parameter (direction)"
         
@@ -196,7 +210,7 @@ class FunctionHandler:
         return self.robot.belt_speed(parameters["direction"], parameters["velocity"])
 
 
-    def belt_distance(self, parameters) -> str:
+    def belt_distance(self, parameters: dict) -> str:
         if "direction" not in parameters:
             return "Missing required parameter (direction)"
         
@@ -209,7 +223,10 @@ class FunctionHandler:
         return self.robot.belt_distance(parameters["direction"], parameters["velocity"], parameters["distance"])
 
 
-    def save_txt(self, parameters) -> str:
+    def save_txt(self, parameters: dict) -> str:
+        """
+        Saves text to file
+        """
         if "file_path" not in parameters:
             return "Missing required parameter (file_path)"
         
@@ -234,7 +251,10 @@ class FunctionHandler:
             return (f"Error occured: {e}")
 
 
-    def get_saved_programs(self, parameters) -> str:
+    def get_saved_programs(self, parameters: dict) -> str:
+        """
+        returns list of all programs in src folder with last change time
+        """
         ret = ""
         folder = "./src"
 
@@ -250,7 +270,10 @@ class FunctionHandler:
         return ret
     
 
-    def get_program(self, parameters) -> str:
+    def get_program(self, parameters: dict) -> str:
+        """
+        returns content of the given file
+        """
         if "file_path" not in parameters:
             return "Missing required parameter (file_path)"
         
@@ -262,7 +285,13 @@ class FunctionHandler:
         return load_file(file_path)
 
 
-    def run_program(self, parameters) -> str:
+    def run_program(self, parameters: dict) -> str:
+        """
+        Runs program from file as subprocess
+
+        Returns:
+            str: result of the program
+        """
         if "file_path" not in parameters:
             return "Missing required parameter (file_path)"
         

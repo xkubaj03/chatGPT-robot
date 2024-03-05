@@ -6,7 +6,7 @@ Jak už jsem řekl, pro opakované úkoly si můžeš vytvořit program, který 
 Můžeš začít třeba s:
 - Vypiš mi aktuální pozici (funkci pro získání pozice můžeš použít i při tvorbě programu)
 - Proveď kalibraci (vhodné pokud dojde k chybě - označuje červená dioda)
-- Posuň se o 5cm směrem nahoru
+- Posuň se o 5 cm směrem nahoru
 - Vypiš mi dostupné programy
 - Napiš mi program který přesune objekt z jedné pozice na druhou. (pro inspiraci)
     - Při takovém úkolu je nutné získat zdrojovou a cílovou pozici.
