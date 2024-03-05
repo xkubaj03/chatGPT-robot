@@ -125,17 +125,15 @@ def FancyPrint(role: Role, message: str) -> None:
 
 
 class Logger:
-    model = ""
-    log_filename = ""
-    Max_tokens = 0
-
-
+    """
+    Class for logging context to a file
+    """
     def __init__(self, model: str, messages: list):
+        self.Max_tokens = 0
         self.model = model
 
         current_time = datetime.datetime.now()
         time_str = current_time.strftime("%Y-%m-%d_%H-%M-%S")
-
         self.log_filename = f"./logs/log_{time_str}.txt"
         
         try:
@@ -161,7 +159,7 @@ class Logger:
             FancyPrint(Role.SYSTEM, f"Error logging message: {e}")
 
 
-    def log_message(self, message, Used_tokens = 0): 
+    def log_message(self, message: str, Used_tokens: int = 0) -> None: 
         if Used_tokens > self.Max_tokens:
             self.Max_tokens = Used_tokens
 
