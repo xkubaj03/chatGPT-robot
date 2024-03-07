@@ -25,7 +25,8 @@ class FunctionHandler:
     def __init__(self, debug: int, url: str):
         self.debug = debug
         self.url = url
-
+        self.robot_running = False
+        
         #set up robot
         try:
             self.robot = r.Robot(url, "assistant")
@@ -112,7 +113,7 @@ class FunctionHandler:
         return load_file('./txt_sources/intro.txt')
 
 
-    def handle_function(self, function_name: str, parameters: dict) -> str:
+    def handle_function(self, function_name: str, parameters: list[dict]) -> str:
         """
         Calls function with given name and parameters (or raises exception if function is not found)
 

@@ -152,7 +152,10 @@ class Logger:
     def __del__(self):
         try:
             with open(self.log_filename, 'a', encoding="utf-8") as file: 
-                file.write("]\nSuccesfully exited!, Total tokens used: " + str(self.Max_tokens) + ", GPT: " + str(self.model))
+                #file.write("]\nSuccesfully exited!, Total tokens used: " + str(self.Max_tokens) + ", GPT: " + str(self.model))
+                file.write(",\n" + str(json.dumps({"used_tokens": str(self.Max_tokens), 
+                                                   "gpt": self.model}, indent=4)) + 
+                                                   "\n]")
                 file.flush()
 
         except Exception as e:

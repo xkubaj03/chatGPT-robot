@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import json
 import time
 import sys
+import tiktoken
 from modules import functions
 from modules import logger
 
@@ -35,12 +36,10 @@ def load_context(filename: str) -> list[dict]:
     """
     try:
         with open(filename, 'r', encoding="utf-8") as file:
-            data = file.readlines()
-            data = data[:-1]
-            data = ''.join(data)
+            data = file.read()
             
-            messages = json.loads(data)
-            return messages
+        messages = json.loads(data)
+        return messages[:-1] # remove last entry, which is the usage and model info
     
     except FileNotFoundError:
         logger.FancyPrint(logger.Role.SYSTEM, f"Soubor {filename} nebyl nalezen.")
@@ -49,6 +48,37 @@ def load_context(filename: str) -> list[dict]:
     except json.JSONDecodeError as e:
         logger.FancyPrint(logger.Role.SYSTEM, f"Obsah souboru {filename} není platný JSON. Error message: {e}")
         exit()
+
+
+def get_used_tokens(messages: list[dict]) -> int:
+    """
+    Get the number of tokens used in the context
+
+    Args:
+        messages (list[dict]): List of messages
+
+    Returns:
+        int: Number of tokens used
+    """
+    encoding = tiktoken.encoding_for_model(MODEL)
+    # TODO: implement token counting which is accurate
+    text = sum(len(encoding.encode(message['content'])) if message['content'] is not None else 0 for message in messages)
+    function_calling_args = sum(len(encoding.encode(message['function_call']['arguments'])) if 'function_call' in message  else 0 for message in messages)
+    print(text + function_calling_args)
+    return text + function_calling_args
+
+
+def clear_context(messages: list[dict]):
+    """
+    Frees the context to fit the token limit
+
+    Args:
+        messages (list[dict]): List of messages
+    """
+    while get_used_tokens(messages) > 16000: #TODO remove hardcoded value
+        del messages[1]
+
+    return
 
 
 def is_command(message: str, handler: functions.FunctionHandler) -> bool:
@@ -62,9 +92,7 @@ def is_command(message: str, handler: functions.FunctionHandler) -> bool:
     Returns:
         bool: True if the message is a command or empty input, False otherwise
     """
-    message = message.lower()
-
-    if message.strip() == "":
+    if not (message := message.lower().strip()):
         return True
     
     if message == "exit":
@@ -78,6 +106,7 @@ def is_command(message: str, handler: functions.FunctionHandler) -> bool:
 
 
 def send_to_chatGPT(messages: list[dict], handler: functions.FunctionHandler, log: logger.Logger, attempts: int = 0) -> str:
+    clear_context(messages)
     try:
         response = openai.ChatCompletion.create(
             model= MODEL,
@@ -181,8 +210,8 @@ def main():
 
     user_input = input("Zadejte vstup: ")
 
-    # loop until user types "exit"
-    while user_input != "exit": #TODO: EXIT COMMAND?
+    # loop until user types "exit" (checked in function is_command())
+    while True: 
         if is_command(user_input, handler):
             user_input = input("Zadejte vstup: ")
             continue
