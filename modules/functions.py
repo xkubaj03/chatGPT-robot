@@ -134,22 +134,25 @@ class FunctionHandler:
         if function_name not in self.functions:
             raise KeyError(f"Function {function_name} not found!")
         
+        if not len(parameters):
+            return self.functions[function_name]()
+        
         return self.functions[function_name](parameters)
 
 
-    def started(self, parameter: dict) -> str:
+    def started(self) -> str:
         return str(self.robot.started())
 
 
-    def start(self, parameters: dict) -> str:
+    def start(self) -> str:
         return self.robot.start()
 
 
-    def stop(self, parameters: dict) -> str:
+    def stop(self) -> str:
         return self.robot.stop()
 
 
-    def get_pose(self, parameters: dict) -> str:
+    def get_pose(self) -> str:
         return str(self.robot.get_pose())
 
 
@@ -189,15 +192,15 @@ class FunctionHandler:
         )
 
 
-    def put_home(self, parameters: dict) -> str:
+    def put_home(self) -> str:
         return self.robot.home()
 
 
-    def suck(self, parameters: dict) -> str:
+    def suck(self) -> str:
         return self.robot.suck()
 
 
-    def release(self, parameters: dict) -> str:
+    def release(self) -> str:
         return self.robot.release()
 
 
@@ -252,7 +255,7 @@ class FunctionHandler:
             return (f"Error occured: {e}")
 
 
-    def get_saved_programs(self, parameters: dict) -> str:
+    def get_saved_programs(self) -> str:
         """
         returns list of all programs in src folder with last change time
         """

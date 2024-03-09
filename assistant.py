@@ -17,8 +17,8 @@ DEBUG = int(os.getenv('DEBUG'))
 URL = os.getenv('ROBOT_URL')
 
 
-
 MAX_TOKENS = 800
+
 
 def load_context(filename: str) -> list[dict]:
     """
@@ -64,7 +64,8 @@ def get_used_tokens(messages: list[dict]) -> int:
     # TODO: implement token counting which is accurate
     text = sum(len(encoding.encode(message['content'])) if message['content'] is not None else 0 for message in messages)
     function_calling_args = sum(len(encoding.encode(message['function_call']['arguments'])) if 'function_call' in message  else 0 for message in messages)
-    print(text + function_calling_args)
+    print("calculated tokens from messages: " + str(text + function_calling_args))
+    
     return text + function_calling_args
 
 
