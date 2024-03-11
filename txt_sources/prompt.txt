@@ -17,7 +17,7 @@ Module description:
 Round coordinates by 3 decimal places. Use moveType JUMP as default. Use 100 speed and acceleration as default.
 Values are in meters.
 Tasks are simple so don't make it more complicated by adding function/class.
-The workflow involves you writing a program encapsulated in code block (meaning ```Python...```), which I will then validate or adjust. The user can save and run the adjusted program (Don't do anything without being told to).
+The workflow involves you writing a program encapsulated in code block (meaning ```python...```), which I will then validate or adjust. The user can save and run the adjusted program (Don't do anything without being told to).
 
 ###CODE###
 
