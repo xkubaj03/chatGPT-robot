@@ -156,7 +156,7 @@ class Robot:
 
     def __init__(self, url: str = URL, mode: Mode = Mode.DEFAULT): 
         """
-        Initializes the Robot object and establishes connection to the robot
+        Initializes the Robot object and establishes a connection to the robot
         """
         self.robot_url = url
         self.mode = mode
@@ -303,7 +303,7 @@ class Robot:
 
     def home(self) -> str:
         """
-        Calibrates the robot and moves to home position
+        Calibrates the robot and moves to the home position
 
         Returns:
             str: A message indicating the result of the operation.
@@ -317,7 +317,7 @@ class Robot:
 
     def suck(self) -> str:
         """
-        Turns on the vacuum. (Holds an object)
+        Turn on the vacuum. (Holds an object)
 
         returns:
             str: A message indicating the result of the operation.
@@ -331,7 +331,7 @@ class Robot:
 
     def release(self) -> str:
         """
-        Turns off the vacuum. (Releases an object)
+        Turn off the vacuum. (Releases an object)
 
         Returns: 
             str: A message indicating the result of the operation.

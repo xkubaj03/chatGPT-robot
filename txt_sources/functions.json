@@ -64,5 +64,21 @@
       "requiredParams":[
          "file_path"
       ]
+   },
+   {
+      "name":"delSavedProgram",
+      "description":"Delete saved program. Programs are usually saved in ./src/program_name.py",
+      "parameters":{
+         "type":"object",
+         "properties":{
+            "file_path":{
+               "type":"string",
+               "description":"File path."
+            }
+         }
+      },
+      "requiredParams":[
+         "file_path"
+      ]
    }
 ]

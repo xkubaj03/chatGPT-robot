@@ -7,7 +7,7 @@ import inspect
 import modules.robot as r
 import modules.logger as l
 
-def load_file(file_path):
+def load_file(file_path: str) -> str:
     try:
         with open(file_path, 'r', encoding="utf-8") as file:
             return file.read()
@@ -33,7 +33,9 @@ class FunctionHandler:
             self.robot_running = True #This makes the robot functions available
 
         except Exception as e:  
-            l.FancyPrint(l.Role.SYSTEM, f"Failed to connect to the Robot: {e} \nAssistent is unable to control the robot!")
+            if self.debug > 4:
+                l.FancyPrint(l.Role.DEBUG, f"Failed to connect to the Robot: {e}")
+            l.FancyPrint(l.Role.SYSTEM, "Assistent is unable to control the robot!")
 
         self.functions = {
             "started": self.started,        
@@ -50,6 +52,7 @@ class FunctionHandler:
             "saveTXT": self.save_txt,      
             "getSavedPrograms": self.get_saved_programs,
             "getSavedProgram": self.get_program,
+            "delSavedProgram": self.del_program,
         }
         
 
@@ -134,7 +137,7 @@ class FunctionHandler:
         if function_name not in self.functions:
             raise KeyError(f"Function {function_name} not found!")
         
-        if not len(parameters):
+        if not parameters:
             return self.functions[function_name]()
         
         return self.functions[function_name](parameters)
@@ -287,6 +290,29 @@ class FunctionHandler:
             file_path = "./src/" + file_path
 
         return load_file(file_path)
+
+
+    def del_program(self, parameters: dict) -> str:
+        """
+        deletes the given file (actually moves it to trash bin)
+        """
+        if "file_path" not in parameters:
+            return "Missing required parameter (file_path)"
+        
+        file_path = parameters["file_path"]
+
+        if "./src/" not in file_path:
+            file_path = "./src/" + file_path
+        
+        try:
+            # move file to trash bin (trash_src folder)
+            target = os.path.join("./trash_src/", os.path.basename(file_path))
+            os.rename(file_path, target)
+
+            return f"File {file_path} was successfully deleted!"
+        
+        except FileNotFoundError as e:
+            return f"Error occurred: {e}"
 
 
     def run_program(self, parameters: dict) -> str:
