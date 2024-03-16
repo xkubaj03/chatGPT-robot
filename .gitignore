@@ -4,3 +4,4 @@ logs/*
 modules/__pycache__
 src/*
 test_logs/*
+txt_sources/tmp.txt
