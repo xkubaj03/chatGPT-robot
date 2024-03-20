@@ -79,7 +79,7 @@ class FunctionHandler:
         info = ""
         module = importlib.import_module(module_name)
         # Exclude classes that are unnecessary
-        exclude_classes = {"Enum", "Mode"}
+        exclude_classes = {"Enum", "Mode", "Quaternion"}
 
 
         for name, obj in inspect.getmembers(module): 
@@ -87,7 +87,7 @@ class FunctionHandler:
                 info += (f"Class: {name}, Docstring: {obj.__doc__}")
 
                 for method_name, method in inspect.getmembers(obj, inspect.isfunction):
-                    info += (f"  Method: {method_name}, Docstring: {method.__doc__}")
+                    info += (f"Method: {method_name}, Docstring: {method.__doc__}")
 
         return info
                     

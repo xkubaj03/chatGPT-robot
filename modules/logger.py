@@ -128,8 +128,8 @@ class Logger:
     """
     Class for logging context to a file
     """
-    def __init__(self, model: str, messages: list):
-        self.Max_tokens = 0
+    def __init__(self, model: str, messages: list, context_size: int = 0):
+        self.Max_tokens = context_size
         self.model = model
 
         current_time = datetime.datetime.now()
@@ -146,7 +146,6 @@ class Logger:
         
         for message in messages[1:]:
             self.log_message(str(json.dumps(message, indent=4)))
-
 
 
     def __del__(self):
@@ -174,3 +173,6 @@ class Logger:
         except Exception as e:
             FancyPrint(Role.SYSTEM, f"Error logging message: {e}")
 
+
+    def get_context_size(self) -> int:
+        return self.Max_tokens

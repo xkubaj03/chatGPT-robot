@@ -19,8 +19,14 @@ URL = os.getenv('ROBOT_URL')
 
 MAX_TOKENS = 800
 
+if "gpt-4" in MODEL:
+    MAX_CONTEXT = 127000
 
-def load_context(filename: str) -> list[dict]:
+else:
+    MAX_CONTEXT = 15000
+
+
+def load_context(filename: str) -> tuple[list[dict], int]:
     """
     Load context from file (remove last line and returns json list).
 
@@ -29,6 +35,7 @@ def load_context(filename: str) -> list[dict]:
 
     Returns:
         list: List of json messages
+        int: Number of tokens used in the context
 
     Raises:
         FileNotFoundError: If the file is not found.
@@ -39,7 +46,8 @@ def load_context(filename: str) -> list[dict]:
             data = file.read()
             
         messages = json.loads(data)
-        return messages[:-1] # remove last entry, which is the usage and model info
+        gpt_tokens = int(messages[-1]['used_tokens'])
+        return messages[:-1], gpt_tokens # remove last entry, which is the usage and model info
     
     except FileNotFoundError:
         logger.FancyPrint(logger.Role.SYSTEM, f"Soubor {filename} nebyl nalezen.")
@@ -48,6 +56,49 @@ def load_context(filename: str) -> list[dict]:
     except json.JSONDecodeError as e:
         logger.FancyPrint(logger.Role.SYSTEM, f"Obsah souboru {filename} není platný JSON. Error message: {e}")
         exit()
+
+
+def num_tokens_from_messages(messages: list[dict], model:str = MODEL) -> int:
+    # Source:
+    # https://cookbook.openai.com/examples/how_to_count_tokens_with_tiktoken#6-counting-tokens-for-chat-completions-api-calls
+    """Return the number of tokens used by a list of messages."""
+    try:
+        encoding = tiktoken.encoding_for_model(model)
+    except KeyError:
+        print("Warning: model not found. Using cl100k_base encoding.")
+        encoding = tiktoken.get_encoding("cl100k_base")
+    if model in {
+        "gpt-3.5-turbo-0613",
+        "gpt-3.5-turbo-16k-0613",
+        "gpt-4-0314",
+        "gpt-4-32k-0314",
+        "gpt-4-0613",
+        "gpt-4-32k-0613",
+        }:
+        tokens_per_message = 3
+        tokens_per_name = 1
+    elif model == "gpt-3.5-turbo-0301":
+        tokens_per_message = 4  # every message follows <|start|>{role/name}\n{content}<|end|>\n
+        tokens_per_name = -1  # if there's a name, the role is omitted
+    elif "gpt-3.5-turbo" in model:
+        #print("Warning: gpt-3.5-turbo may update over time. Returning num tokens assuming gpt-3.5-turbo-0613.")
+        return num_tokens_from_messages(messages, model="gpt-3.5-turbo-0613")
+    elif "gpt-4" in model:
+        print("Warning: gpt-4 may update over time. Returning num tokens assuming gpt-4-0613.")
+        return num_tokens_from_messages(messages, model="gpt-4-0613")
+    else:
+        raise NotImplementedError(
+            f"""num_tokens_from_messages() is not implemented for model {model}. See https://github.com/openai/openai-python/blob/main/chatml.md for information on how messages are converted to tokens."""
+        )
+    num_tokens = 0
+    for message in messages:
+        num_tokens += tokens_per_message
+        for key, value in message.items():
+            num_tokens += len(encoding.encode(str(value)))
+            if key == "name":
+                num_tokens += tokens_per_name
+    num_tokens += 3  # every reply is primed with <|start|>assistant<|message|>
+    return num_tokens
 
 
 def get_used_tokens(messages: list[dict]) -> int:
@@ -61,23 +112,33 @@ def get_used_tokens(messages: list[dict]) -> int:
         int: Number of tokens used
     """
     encoding = tiktoken.encoding_for_model(MODEL)
-    # TODO: implement token counting which is accurate
-    text = sum(len(encoding.encode(message['content'])) if message['content'] is not None else 0 for message in messages)
-    function_calling_args = sum(len(encoding.encode(message['function_call']['arguments'])) if 'function_call' in message  else 0 for message in messages)
-    print("calculated tokens from messages: " + str(text + function_calling_args))
     
-    return text + function_calling_args
+    return len(encoding.encode(json.dumps(messages))) 
 
 
-def clear_context(messages: list[dict]):
+def clear_context(messages: list[dict], actual_context_size: int, limit: int = MAX_CONTEXT) -> None:
     """
     Frees the context to fit the token limit
 
     Args:
         messages (list[dict]): List of messages
-    """
-    while get_used_tokens(messages) > 16000: #TODO remove hardcoded value
-        del messages[1]
+        actual_context_size (int): Number of tokens used in the context (returned by chatGPT)
+    """   
+    
+    if actual_context_size < limit:
+        return
+    
+    val = actual_context_size - limit
+    i = 1
+    tmp = (num_tokens_from_messages(messages[1:i]) + get_used_tokens(messages[1:i])) / 2
+    while tmp < val:
+        tmp = (num_tokens_from_messages(messages[1:i]) + get_used_tokens(messages[1:i])) / 2
+        i+=1
+
+    del messages[1:i]
+    
+    if DEBUG > 4:
+        logger.FancyPrint(logger.Role.DEBUG, "REMOVED Context")
 
     return
 
@@ -107,21 +168,32 @@ def is_command(message: str, handler: functions.FunctionHandler) -> bool:
 
 
 def send_to_chatGPT(messages: list[dict], handler: functions.FunctionHandler, log: logger.Logger, attempts: int = 0) -> str:
-    clear_context(messages)
+    clear_context(messages, log.get_context_size())
     try:
         response = openai.ChatCompletion.create(
             model= MODEL,
             messages = messages,
             functions = handler.get_all_specs(),
-            max_tokens = MAX_TOKENS,
+            max_tokens = MAX_TOKENS,    
         )
     except openai.error.AuthenticationError as e:
-        logger.FancyPrint(logger.Role.SYSTEM, f"Nastala chyba při autentizaci. Zkontrolujte svůj API key. \nChyba: {e}")
+        logger.FancyPrint(logger.Role.SYSTEM, "Nastala chyba při autentizaci. Zkontrolujte svůj API key.")
+        if DEBUG > 4:
+            logger.FancyPrint(logger.Role.DEBUG, f"Chyba: {e}")
         exit()
-
+    
     except (openai.APIError, openai.error.RateLimitError) as e:
+        if "You exceeded your current quota" in str(e):
+            logger.FancyPrint(logger.Role.SYSTEM, "Byl překročen aktuální limit. Zkontrolujte svůj účet, zda máte zaplaceno.")
+            if DEBUG > 4:
+                logger.FancyPrint(logger.Role.DEBUG, f"Chyba: {e}")
+            exit()
+
         attempts += 1
-        logger.FancyPrint(logger.Role.SYSTEM, f"Nastala chyba při komunikaci s chatGPT: {e}")
+        logger.FancyPrint(logger.Role.SYSTEM, "Nastala chyba při komunikaci s chatGPT")
+        if DEBUG > 4:  
+            logger.FancyPrint(logger.Role.DEBUG, f"Chyba: {e}")
+            logger.FancyPrint(logger.Role.DEBUG, f"Pokus číslo: {attempts}")
         
         if attempts > 3:
             logger.FancyPrint(logger.Role.SYSTEM, "Příliš mnoho pokusů o komunikaci s chatGPT. Program se ukončí.")
@@ -149,7 +221,7 @@ def send_to_chatGPT(messages: list[dict], handler: functions.FunctionHandler, lo
 
     token_usage = response['usage']['completion_tokens']
     total_tokens = response['usage']['total_tokens']
-
+    print("total tokens(gpt): " + str(total_tokens))
     if (DEBUG > 8):
         logger.FancyPrint(logger.Role.DEBUG, f"Token usage: {token_usage}")
 
@@ -159,6 +231,12 @@ def send_to_chatGPT(messages: list[dict], handler: functions.FunctionHandler, lo
 
     message = response.choices[0]['message']['content']
     messages.append(response.choices[0]['message'])
+    print("Get used tokens:" + str(get_used_tokens(messages)))
+    try:
+        print("Num_tokens... "+ str(num_tokens_from_messages(messages)))
+    except:
+        pass
+
     log.log_message(str(json.dumps(response.choices[0]['message'], indent=4)), total_tokens)
 
     if "function_call" in response.choices[0]['message']:
@@ -193,10 +271,12 @@ def main():
         {"role": "system", "content": str({handler.get_prompt_message()})},
     ]
     
+    context_len = 0
+
     if len(sys.argv) > 1:
-        messages = load_context(sys.argv[1])
+        messages, context_len = load_context(sys.argv[1])        
     
-    log = logger.Logger(MODEL, messages)    
+    log = logger.Logger(MODEL, messages, context_len)    
 
     resp = send_to_chatGPT(messages, handler, log)
 
