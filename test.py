@@ -21,7 +21,7 @@ for i, row in enumerate(questions_prompts):
             command = cell.replace('command:', '')
             com_param = command.split('#')
             print(f"Command: {command}")
-            Handler.HandleFunction(com_param[0], dict(com_param[1]))
+            Handler.handle_function(com_param[0], dict(com_param[1]))
             continue    
 
         process.stdin.write(cell + '\n')

@@ -1,0 +1,6 @@
+colorama==0.4.6
+openai==0.28.1
+pyquaternion==0.9.9
+python-dotenv==1.0.1
+Requests==2.31.0
+tiktoken==0.6.0

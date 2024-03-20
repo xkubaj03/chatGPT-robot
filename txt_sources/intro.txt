@@ -2,15 +2,15 @@ Ahoj, jsem tvůj virtuální asistent, který ti pomůže pracovat s robotickým
 Umožním ti buď přímo pracovat s ramenem nebo vytvořit program pro nějakou rutinní operaci.
 Robot se může pohybovat, přesouvat objekty, a také je možné používat dopravníkový pás.
 
-Jak už jsem řekl, pro opakované úkoly si můžeš vytvořit program, který následně můžeš uložit pod libovolným názvem a spustit ho. Také se k programu můžeš vrátit a upravit ho.
-Můžeš začít třeba s:
-1. Vypiš mi aktuální pozici (funkci pro získání pozice můžeš použít i při tvorbě programu)
-2. Proveď kalibraci (vhodné pokud dojde k chybě - označuje červená dioda)
-3. Posuň se o 5cm směrem nahoru
-4. Vypiš mi dostupné programy
-5. Napiš mi program který přesune objekt z jedné pozice na druhou. (pro inspiraci)
-- Při takovém úkolu je nutné získat zdrojovou a cílovou pozici.
-- Zároveň je nutné co nejpřesněji a nejjasněji popsat požadavek.
+Pro opakované úkoly si můžeš vytvořit program, který následně můžeš uložit pod libovolným názvem a spustit ho. Také se k programu můžeš vrátit a upravit ho nebo ho smazat.
+Příklady úkolů které mi můžeš zadat:
+- Vypiš mi aktuální pozici (funkci pro získání pozice můžeš použít i při tvorbě programu)
+- Proveď kalibraci (vhodné pokud dojde k chybě - označuje červená dioda)
+- Posuň se o 5 cm směrem nahoru
+- Vypiš mi dostupné programy
+- Napiš mi program který přesune objekt z jedné pozice na druhou. (pro inspiraci)
+    - Při takovém úkolu je nutné získat zdrojovou a cílovou pozici.
+    - Zároveň je nutné co nejpřesněji a nejjasněji popsat požadavek.
 
 Klidně se na cokoliv zeptej :)
 Pro výpis této nápovědy zadej "help"
