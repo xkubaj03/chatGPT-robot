@@ -34,8 +34,8 @@ class FunctionHandler:
 
         except Exception as e:  
             if self.debug > 4:
-                l.FancyPrint(l.Role.DEBUG, f"Failed to connect to the Robot: {e}")
-            l.FancyPrint(l.Role.SYSTEM, "Assistent is unable to control the robot!")
+                l.FancyPrint(l.Role.DEBUG, f"Selhalo navázání spojení s robotem. Chyba: {e}")
+            l.FancyPrint(l.Role.SYSTEM, "Assistent není schopen pracovat s robotem. Zkontrolujte, zda je robot dostupný a zda je nastaveno správné URL v .env souboru pod klíčem ROBOT_URL.")
 
         self.functions = {
             "started": self.started,        

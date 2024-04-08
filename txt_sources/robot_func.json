@@ -144,7 +144,7 @@
             "properties": {
                 "direction": {
                     "type": "string",
-                    "enum": ["forward", "backward"],
+                    "enum": ["forward", "backwards"],
                     "description": "Type of movement"
                 },
                 "velocity": {

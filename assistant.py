@@ -10,20 +10,24 @@ from modules import logger
 
 load_dotenv()
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+if OPENAI_API_KEY is None:
+    logger.FancyPrint(logger.Role.SYSTEM, "Není nastaven API klíč pro OpenAI. Zadejte ho do souboru .env pod klíčem OPENAI_API_KEY.")
+    exit()
+
 openai.api_key = OPENAI_API_KEY
 
-MODEL = os.getenv('MODEL')
-DEBUG = int(os.getenv('DEBUG'))
+MODEL = os.getenv('MODEL', 'gpt-3.5-turbo-0125')
+DEBUG = int(os.getenv('DEBUG', '0')) # 0 - no debug, 10 - all debug
 URL = os.getenv('ROBOT_URL')
 
 
 MAX_TOKENS = 800
 
 if "gpt-4" in MODEL:
-    MAX_CONTEXT = 127000
+    MODEL_MAX_CONTEXT = 127000
 
 else:
-    MAX_CONTEXT = 15000
+    MODEL_MAX_CONTEXT = 15000
 
 
 def load_context(filename: str) -> tuple[list[dict], int]:
@@ -116,7 +120,7 @@ def get_used_tokens(messages: list[dict]) -> int:
     return len(encoding.encode(json.dumps(messages))) 
 
 
-def clear_context(messages: list[dict], actual_context_size: int, limit: int = MAX_CONTEXT) -> None:
+def clear_context(messages: list[dict], actual_context_size: int, limit: int = MODEL_MAX_CONTEXT) -> None:
     """
     Frees the context to fit the token limit
 
@@ -165,6 +169,20 @@ def is_command(message: str, handler: functions.FunctionHandler) -> bool:
         return True
     
     return False
+
+
+def better_input() -> str:
+    """
+    Get user input with better handling of KeyboardInterrupt
+
+    Returns:
+        str: User input
+    """
+    try:
+        return input("Zadejte vstup: ")
+    except (KeyboardInterrupt, EOFError):
+        logger.FancyPrint(logger.Role.SYSTEM,"\nUkončuji program...")
+        exit()
 
 
 def send_to_chatGPT(messages: list[dict], handler: functions.FunctionHandler, log: logger.Logger, attempts: int = 0) -> str:
@@ -221,7 +239,7 @@ def send_to_chatGPT(messages: list[dict], handler: functions.FunctionHandler, lo
 
     token_usage = response['usage']['completion_tokens']
     total_tokens = response['usage']['total_tokens']
-    print("total tokens(gpt): " + str(total_tokens))
+
     if (DEBUG > 8):
         logger.FancyPrint(logger.Role.DEBUG, f"Token usage: {token_usage}")
 
@@ -231,11 +249,14 @@ def send_to_chatGPT(messages: list[dict], handler: functions.FunctionHandler, lo
 
     message = response.choices[0]['message']['content']
     messages.append(response.choices[0]['message'])
-    print("Get used tokens:" + str(get_used_tokens(messages)))
-    try:
-        print("Num_tokens... "+ str(num_tokens_from_messages(messages)))
-    except:
-        pass
+
+    if DEBUG > 4:
+        logger.FancyPrint(logger.Role.DEBUG, "total tokens(gpt): " + str(total_tokens))
+        logger.FancyPrint(logger.Role.DEBUG, "Get used tokens:" + str(get_used_tokens(messages)))
+        try:
+            logger.FancyPrint(logger.Role.DEBUG, "Num_tokens... "+ str(num_tokens_from_messages(messages)))
+        except:
+            pass
 
     log.log_message(str(json.dumps(response.choices[0]['message'], indent=4)), total_tokens)
 
@@ -289,12 +310,12 @@ def main():
     if len(messages) <= 2:
         logger.FancyPrint(logger.Role.GPT, handler.get_welcome_message())
 
-    user_input = input("Zadejte vstup: ")
+    user_input = better_input()
 
     # loop until user types "exit" (checked in function is_command())
     while True: 
         if is_command(user_input, handler):
-            user_input = input("Zadejte vstup: ")
+            user_input = better_input()
             continue
         
         messages.append({"role": "user", "content": user_input})
@@ -303,7 +324,7 @@ def main():
         resp = send_to_chatGPT(messages, handler, log)
 
         logger.FancyPrint(logger.Role.GPT, resp)
-        user_input = input("Zadejte vstup: ")
+        user_input = better_input()
 
     
 if __name__ == "__main__":

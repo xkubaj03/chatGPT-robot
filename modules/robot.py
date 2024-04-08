@@ -556,3 +556,18 @@ class Robot:
             pose.orientation.rotate(angle_deg, "z")
         
         return self.move_to(pose, "LINEAR", velocity)
+
+
+    @staticmethod
+    def fix_orientation(dest_pose: Pose, src_pose: Pose = Pose(Position(20,0,0),Orientation(0,0,0,0))) -> int:
+        print(f"Pose1: [{dest_pose.position.x}, {dest_pose.position.y}], Pose2: [{src_pose.position.x}, {src_pose.position.y}]")
+
+        numenator = dest_pose.position.x * src_pose.position.x + dest_pose.position.y * src_pose.position.y
+        norm1 = math.sqrt(dest_pose.position.x**2 + dest_pose.position.y**2)
+        norm2 = math.sqrt(src_pose.position.x**2 + src_pose.position.y**2)
+        cos = numenator / (norm1 * norm2)
+        angle_rad = math.acos(cos)
+        angle_deg = math.degrees(angle_rad)
+        # TODO: zjistit směr otáčení, orotovat a vrátit z5
+        return angle_deg
+    
