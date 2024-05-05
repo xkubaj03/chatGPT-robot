@@ -11,7 +11,8 @@ Příklady úkolů které mi můžeš zadat:
 - Napiš mi program který přesune objekt z jedné pozice na druhou. (pro inspiraci)
     - Při takovém úkolu je nutné získat zdrojovou a cílovou pozici.
     - Zároveň je nutné co nejpřesněji a nejjasněji popsat požadavek.
+    - Pro efektivní práci s pozicemi je dopručeno buď nejprve načíst všechny potřebné pozice, které jsou využívány v zadáních úkolů, nebo vytvořit kostru programu, načíst pozice a poté je nechat začlenit do kódu.
 
-Klidně se na cokoliv zeptej :)
-Pro výpis této nápovědy zadej "help"
+Klidně se na cokoliv zeptej :)  
+Pro výpis této nápovědy zadej "help"  
 Pro ukončení zadej "exit"

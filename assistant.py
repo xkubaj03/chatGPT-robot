@@ -51,8 +51,12 @@ def load_context(filename: str) -> tuple[list[dict], int]:
             
         messages = json.loads(data)
         gpt_tokens = int(messages[-1]['used_tokens'])
-        return messages[:-1], gpt_tokens # remove last entry, which is the usage and model info
-    
+        
+        if "gpt" in messages[-1]:
+            return messages[:-1], gpt_tokens # remove last entry, which is the usage and model info
+        
+        return messages, gpt_tokens #incorectly ended
+
     except FileNotFoundError:
         logger.FancyPrint(logger.Role.SYSTEM, f"Soubor {filename} nebyl nalezen.")
         exit()

@@ -30,7 +30,7 @@
         "requiredParams": []
     },  
     {
-        "name": "getPose",
+        "name": "get_pose",
         "description": "Gets the robot's arm current position and orientation",
         "parameters": {      
             "type": "object",  
@@ -40,7 +40,7 @@
         "requiredParams": []
     },
     {
-        "name": "putPose",
+        "name": "move_to",
         "description": "Sets the robot's arm position and orientation. If not mentioned use orientation from getDefValues. Set coordinates as a single, pre-calculated number rounded to three decimal places. NOT like 0.3293115234375 - 0.02.",
         "parameters": {      
             "type": "object",  
@@ -107,7 +107,7 @@
         "requiredParams": ["moveType", "pose"]
     },
     {
-        "name": "putHome",
+        "name": "home",
         "description": "Calibrates robot arm",
         "parameters": {      
             "type": "object",  
@@ -137,7 +137,7 @@
         "requiredParams": []
     },
     {
-        "name": "beltSpeed",
+        "name": "belt_speed",
         "description": "Moves the belt in certain speed and direction.",
         "parameters": {      
             "type": "object",  
@@ -156,7 +156,7 @@
         }
     },
     {
-        "name": "beltDistance",
+        "name": "belt_distance",
         "description": "Moves the belt in certain, distance, velocity and direction.",
         "parameters": {      
             "type": "object",  

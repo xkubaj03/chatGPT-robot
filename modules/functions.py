@@ -41,13 +41,13 @@ class FunctionHandler:
             "started": self.started,        
             "start": self.start,
             "stop": self.stop,     
-            "getPose": self.get_pose,
-            "putPose": self.put_pose,
-            "putHome": self.put_home,
+            "get_pose": self.get_pose,
+            "move_to": self.put_pose,
+            "home": self.put_home,
             "suck": self.suck,
             "release": self.release,
-            "beltSpeed": self.belt_speed,
-            "beltDistance": self.belt_distance,
+            "belt_speed": self.belt_speed,
+            "belt_distance": self.belt_distance,
             "runSavedProgram": self.run_program,
             "saveTXT": self.save_txt,      
             "getSavedPrograms": self.get_saved_programs,
@@ -91,8 +91,8 @@ class FunctionHandler:
 
         return info
                     
-
-    def get_prompt_message(self) -> str:
+    @staticmethod
+    def get_prompt_message() -> str:
         """
         returns initial prompt message filled with sample code
         """
@@ -108,8 +108,8 @@ class FunctionHandler:
 
         return prompt
 
-
-    def get_welcome_message(self) -> str:
+    @staticmethod
+    def get_welcome_message() -> str:
         """
         returns welcome message
         """
@@ -138,7 +138,10 @@ class FunctionHandler:
             raise KeyError(f"Function {function_name} not found!")
         
         if not parameters:
-            return self.functions[function_name]()
+            try:
+                return self.functions[function_name]()
+            except TypeError.missing_arguments as e:
+                return "Missing required parameter"
         
         return self.functions[function_name](parameters)
 
