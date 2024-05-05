@@ -6,3 +6,4 @@ src/*
 test_logs/*
 txt_sources/tmp.txt
 trash_src/*
+__pycache__
