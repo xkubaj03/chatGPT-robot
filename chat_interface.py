@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 import modules.functions as f
 import modules.logger as l
 import json
+
+# Fix pro šířku stránky
 st.markdown("""
 <style>
 .st-emotion-cache-11kmii3 {
@@ -60,6 +62,7 @@ def rename_file(directory, old_name, new_name):
     old_path = os.path.join(directory, old_name)
     new_path = os.path.join(directory, new_name)
     os.rename(old_path, new_path)
+
 
 def clear_session_vars():
     for key in list(st.session_state.keys()):
@@ -191,7 +194,12 @@ selected_file = st.sidebar.radio("Vyberte log soubor", files, index=0)
 if selected_file and selected_file != "Žádný":
     new_file_name = st.sidebar.text_input("Nový název souboru", value=selected_file)
     if st.sidebar.button("Přejmenovat"):
-        rename_file(log_directory, selected_file, new_file_name)
+        current = st.session_state.logger.log_filename
+        
+        if current == "./logs/" + selected_file:
+            st.session_state.logger.log_filename = "./logs/" + new_file_name
+            
+        rename_file(log_directory, selected_file, new_file_name)              
         st.sidebar.success("Soubor přejmenován")
         st.rerun()  # Aktualizuje seznam souborů v sidebaru
 

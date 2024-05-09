@@ -148,6 +148,14 @@ class Logger:
             self.log_message(str(json.dumps(message, indent=4)))
 
 
+    @property
+    def log_filename(self) -> str:
+        return self._log_filename
+
+    @log_filename.setter
+    def log_filename(self, filename: str) -> None:
+        self._log_filename = filename
+
     def __del__(self):
         try:
             with open(self.log_filename, 'a', encoding="utf-8") as file: 

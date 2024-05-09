@@ -63,6 +63,18 @@ def load_context(filename: str) -> tuple[list[dict], int]:
 
     except json.JSONDecodeError as e:
         logger.FancyPrint(logger.Role.SYSTEM, f"Obsah souboru {filename} není platný JSON. Error message: {e}")
+        try:
+            data += "]"
+            messages = json.loads(data)
+            gpt_tokens = int(messages[-1]['used_tokens'])
+            
+            if "gpt" in messages[-1]:
+                return messages[:-1], gpt_tokens # remove last entry, which is the usage and model info
+            
+            return messages, gpt_tokens #incorectly ended
+        except json.JSONDecodeError as e:
+            logger.FancyPrint(logger.Role.SYSTEM, f"Obsah souboru {filename} není opravitelný. Error message: {e}")
+            
         exit()
 
 
