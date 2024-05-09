@@ -20,25 +20,23 @@ You can use Docker to run the application, which allows for quick and easy setup
 
    First, build the Docker image from the Dockerfile in your project using the command:
 
-   ```docker build -t your_image_name .```
+   ```docker build -t <your_image_name> .```
 
    This command creates a new Docker image named your_image_name based on the instructions defined in your Dockerfile.
 
 2. **Running the container**:
 
     After successfully building the image, you can run the container as follows:   
-    ```docker run -d --name your_container_name --env-file .env your_image_name```
+    ```docker run -d --name <your_container_name> -p 8501:8501 --env-file <path_to_env> <your_image_name>```
 
     This command runs the container in detached mode (-d means in the background) with the name your_container_name based on the your_image_name image.  
-    If you prefer to run the container in interactive mode, you can use the -it flag instead.
 
-3. **Interacting with the container**:
+3. **Using web GUI**:
+    After running the container the web GUI should be accessible at 
 
-    To interact with the running container, use:  
-    ```docker exec -it your_container_name /bin/bash```
+4. **Interacting with the console app**:
 
-    This command allows you to access the shell inside the container, which is useful for debugging and executing commands within the container. Once inside the container, you can finally start the assistant by running the command:  
     ```python assistant.py```
 
     Additionally, you can specify the path to a log file as a parameter, which will load the conversation context from the log. For example:  
-    ```python assistant.py /path/to/your/logfile.log```
+    ```python assistant.py /path/to/your/logfile.txt```
